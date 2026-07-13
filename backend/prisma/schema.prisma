@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  EXERCISE
+  STUDY
+  READING
+  ETC
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String?  @unique
+  passwordHash  String?
+  oauthProvider String?
+  oauthId       String?
+  nickname      String
+  createdAt     DateTime @default(now())
+
+  activities Activity[]
+  sessions   Session[]
+  growth     Growth?
+
+  @@unique([oauthProvider, oauthId])
+}
+
+model Activity {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  name      String
+  category  Category
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  sessions Session[]
+}
+
+model Session {
+  id              String    @id @default(uuid())
+  activityId      String
+  activity        Activity  @relation(fields: [activityId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  verifiedSeconds Int       @default(0)
+  lastHeartbeatAt DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+}
+
+model Growth {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  currentGauge   Int      @default(0)
+  lastActiveDate DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
