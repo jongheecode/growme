@@ -87,4 +87,35 @@ describe('Session lifecycle', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(endRes.body.verifiedSeconds).toBeLessThanOrEqual(300);
   });
+
+  it('applies growth only once when two /end requests race on the same session', async () => {
+    const { token, activityId } = await setupUserAndActivity();
+    const startRes = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ activityId });
+    const sessionId = startRes.body.id;
+
+    vi.advanceTimersByTime(60_000);
+
+    const [res1, res2] = await Promise.all([
+      request(app)
+        .post(`/api/sessions/${sessionId}/end`)
+        .set('Authorization', `Bearer ${token}`),
+      request(app)
+        .post(`/api/sessions/${sessionId}/end`)
+        .set('Authorization', `Bearer ${token}`),
+    ]);
+
+    const statuses = [res1.status, res2.status].sort();
+    expect(statuses).toEqual([200, 404]);
+
+    const successRes = res1.status === 200 ? res1 : res2;
+
+    const decoded = JSON.parse(
+      Buffer.from(token.split('.')[1], 'base64').toString()
+    );
+    const growth = await prisma.growth.findUnique({ where: { userId: decoded.userId } });
+    expect(growth?.currentGauge).toBe(successRes.body.verifiedSeconds);
+  });
 });

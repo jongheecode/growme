@@ -66,12 +66,15 @@ router.post('/:id/end', requireAuth, async (req: AuthedRequest, res) => {
       MAX_GAP_SECONDS
     );
     const verifiedSeconds = session.verifiedSeconds + Math.round(gapSeconds);
-    const updated = await prisma.session.update({
-      where: { id: session.id },
+    const result = await prisma.session.updateMany({
+      where: { id: req.params.id, userId: req.userId!, endedAt: null },
       data: { endedAt: now, verifiedSeconds, lastHeartbeatAt: now },
     });
-    await applySessionToGrowth(req.userId!, updated.verifiedSeconds);
-    res.json({ verifiedSeconds: updated.verifiedSeconds });
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'session not found or already ended' });
+    }
+    await applySessionToGrowth(req.userId!, verifiedSeconds);
+    res.json({ verifiedSeconds });
   } catch {
     res.status(500).json({ error: 'internal server error' });
   }

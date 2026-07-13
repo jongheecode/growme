@@ -8,10 +8,11 @@ export async function closeStaleSessions() {
     where: { endedAt: null, lastHeartbeatAt: { lt: threshold } },
   });
   for (const session of staleSessions) {
-    const updated = await prisma.session.update({
-      where: { id: session.id },
+    const result = await prisma.session.updateMany({
+      where: { id: session.id, endedAt: null },
       data: { endedAt: session.lastHeartbeatAt },
     });
-    await applySessionToGrowth(session.userId, updated.verifiedSeconds);
+    if (result.count === 0) continue;
+    await applySessionToGrowth(session.userId, session.verifiedSeconds);
   }
 }
