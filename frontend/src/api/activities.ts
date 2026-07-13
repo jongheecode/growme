@@ -8,6 +8,7 @@ export interface Activity {
 
 export async function listActivities(): Promise<Activity[]> {
   const res = await apiFetch('/api/activities');
+  if (!res.ok) throw new Error('failed to fetch activities');
   return res.json();
 }
 
@@ -16,5 +17,6 @@ export async function createActivity(name: string, category: Activity['category'
     method: 'POST',
     body: JSON.stringify({ name, category }),
   });
+  if (!res.ok) throw new Error('failed to create activity');
   return res.json();
 }

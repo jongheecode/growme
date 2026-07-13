@@ -33,4 +33,22 @@ describe('ActivitySelectPage', () => {
       expect(fetch).toHaveBeenCalledTimes(2);
     });
   });
+
+  it('shows an error message when listActivities fails instead of crashing', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: 'invalid token' }),
+    });
+
+    render(
+      <MemoryRouter>
+        <ActivitySelectPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('활동 목록을 불러오지 못했어요')).toBeInTheDocument();
+    });
+  });
 });

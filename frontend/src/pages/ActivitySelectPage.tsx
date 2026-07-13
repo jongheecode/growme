@@ -8,17 +8,32 @@ export default function ActivitySelectPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Activity['category']>('ETC');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    listActivities().then(setActivities);
+    async function fetchActivities() {
+      try {
+        const data = await listActivities();
+        setActivities(data);
+      } catch {
+        setError('활동 목록을 불러오지 못했어요');
+      }
+    }
+    fetchActivities();
   }, []);
 
   async function handleCreate() {
-    const created = await createActivity(name, category);
-    setActivities((prev) => [...prev, created]);
-    setName('');
+    try {
+      const created = await createActivity(name, category);
+      setActivities((prev) => [...prev, created]);
+      setName('');
+    } catch {
+      setError('활동을 만들지 못했어요');
+    }
   }
+
+  if (error) return <p>{error}</p>;
 
   return (
     <div>

@@ -37,4 +37,20 @@ describe('requireAuth', () => {
       .set('Authorization', 'Bearer garbage');
     expect(res.status).toBe(401);
   });
+
+  it('rejects validly-signed tokens missing a userId claim', async () => {
+    const token = jwt.sign({ foo: 'bar' }, process.env.JWT_SECRET!);
+    const res = await request(buildTestApp())
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects validly-signed tokens with a non-string userId claim', async () => {
+    const token = jwt.sign({ userId: 12345 }, process.env.JWT_SECRET!);
+    const res = await request(buildTestApp())
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(401);
+  });
 });

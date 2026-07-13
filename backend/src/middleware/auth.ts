@@ -12,7 +12,10 @@ export function requireAuth(req: AuthedRequest, res: Response, next: NextFunctio
   }
   const token = header.slice('Bearer '.length);
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId?: unknown };
+    if (typeof payload.userId !== 'string' || payload.userId.length === 0) {
+      return res.status(401).json({ error: 'invalid token' });
+    }
     req.userId = payload.userId;
     next();
   } catch {
