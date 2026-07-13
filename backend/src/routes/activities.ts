@@ -6,12 +6,16 @@ import { isNonEmptyString } from './auth';
 
 const router = Router();
 
+function isCategory(value: unknown): value is Category {
+  return typeof value === 'string' && (Object.values(Category) as string[]).includes(value);
+}
+
 router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   const { name, category } = req.body;
   if (!isNonEmptyString(name) || !isNonEmptyString(category)) {
     return res.status(400).json({ error: 'name and category are required' });
   }
-  if (!Object.values(Category).includes(category as Category)) {
+  if (!isCategory(category)) {
     return res.status(400).json({ error: 'category must be one of ' + Object.values(Category).join(', ') });
   }
   try {
