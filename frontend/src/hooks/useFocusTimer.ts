@@ -14,6 +14,11 @@ export function useFocusTimer(activityId: string) {
   // Relying on `isPaused` state alone would let a stale interval closure
   // fire one extra heartbeat between the visibility change and the next render.
   const pausedRef = useRef(false);
+  // Last value confirmed by the server (heartbeat/start/end), and the wall-clock
+  // time it was set. The 1s display ticker below extrapolates from these so the
+  // timer visibly counts up between heartbeats instead of jumping every 30s.
+  const baseSecondsRef = useRef(0);
+  const syncedAtRef = useRef(Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +42,9 @@ export function useFocusTimer(activityId: string) {
       const hidden = document.visibilityState === 'hidden';
       pausedRef.current = hidden;
       setIsPaused(hidden);
+      // Re-anchor so the paused duration itself isn't extrapolated as elapsed
+      // time by the display ticker once the tab becomes visible again.
+      syncedAtRef.current = Date.now();
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -47,6 +55,8 @@ export function useFocusTimer(activityId: string) {
       if (pausedRef.current || !sessionIdRef.current) return;
       try {
         const { verifiedSeconds } = await sendHeartbeat(sessionIdRef.current);
+        baseSecondsRef.current = verifiedSeconds;
+        syncedAtRef.current = Date.now();
         setElapsedSeconds(verifiedSeconds);
         setError(null);
       } catch (err) {
@@ -56,6 +66,19 @@ export function useFocusTimer(activityId: string) {
       }
     }, HEARTBEAT_MS);
     return () => clearInterval(interval);
+  }, []);
+
+  // Ticks the displayed number every second between heartbeats. The server
+  // heartbeat response remains the source of truth (re-synced above); this
+  // only smooths what the user sees so the timer doesn't look frozen for
+  // up to 30s at a stretch.
+  useEffect(() => {
+    const tick = setInterval(() => {
+      if (pausedRef.current || !sessionIdRef.current) return;
+      const localElapsed = baseSecondsRef.current + Math.floor((Date.now() - syncedAtRef.current) / 1000);
+      setElapsedSeconds(localElapsed);
+    }, 1000);
+    return () => clearInterval(tick);
   }, []);
 
   async function end() {
