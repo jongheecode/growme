@@ -6,7 +6,7 @@ import { prisma } from '../db';
 
 const router = Router();
 
-function issueToken(userId: string) {
+export function issueToken(userId: string) {
   return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 }
 
