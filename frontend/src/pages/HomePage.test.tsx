@@ -1,17 +1,24 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import App from './App';
+import { MemoryRouter } from 'react-router-dom';
+import HomePage from './HomePage';
 
-describe('App', () => {
-  it('renders the home page', async () => {
+describe('HomePage', () => {
+  it('shows the current stage and category', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ currentGauge: 3700, stage: 1, dominantCategory: 'STUDY' }),
     }) as any;
 
-    render(<App />);
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
     await waitFor(() => {
       expect(screen.getByText(/STUDY/)).toBeInTheDocument();
+      expect(screen.getByText(/1단계/)).toBeInTheDocument();
     });
   });
 });
