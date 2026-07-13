@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { Category } from '@prisma/client';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { isNonEmptyString } from './auth';
@@ -9,6 +10,9 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   const { name, category } = req.body;
   if (!isNonEmptyString(name) || !isNonEmptyString(category)) {
     return res.status(400).json({ error: 'name and category are required' });
+  }
+  if (!Object.values(Category).includes(category as Category)) {
+    return res.status(400).json({ error: 'category must be one of ' + Object.values(Category).join(', ') });
   }
   try {
     const activity = await prisma.activity.create({

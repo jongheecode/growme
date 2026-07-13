@@ -60,4 +60,13 @@ describe('Activity CRUD', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(listRes.body).toHaveLength(0);
   });
+
+  it('rejects activity creation with an invalid category', async () => {
+    const token = await signupAndGetToken('act5@example.com');
+    const createRes = await request(app)
+      .post('/api/activities')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: '잘못된 카테고리', category: 'garbage' });
+    expect(createRes.status).toBe(400);
+  });
 });
