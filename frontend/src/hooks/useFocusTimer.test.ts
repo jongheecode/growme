@@ -59,4 +59,19 @@ describe('useFocusTimer', () => {
     expect(sessionsApi.endSession).toHaveBeenCalledWith('session-1');
     expect(finalSeconds).toBe(60);
   });
+
+  it('surfaces an error instead of throwing when a heartbeat fails', async () => {
+    (sessionsApi.sendHeartbeat as any).mockRejectedValueOnce(new Error('network error'));
+
+    const { result } = renderHook(() => useFocusTimer('activity-1'));
+    await waitFor(() => expect(sessionsApi.startSession).toHaveBeenCalled());
+
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+      await Promise.resolve();
+    });
+
+    expect(sessionsApi.sendHeartbeat).toHaveBeenCalledWith('session-1');
+    expect(result.current.error).toBeTruthy();
+  });
 });

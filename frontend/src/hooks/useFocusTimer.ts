@@ -48,6 +48,7 @@ export function useFocusTimer(activityId: string) {
       try {
         const { verifiedSeconds } = await sendHeartbeat(sessionIdRef.current);
         setElapsedSeconds(verifiedSeconds);
+        setError(null);
       } catch (err) {
         // Same reasoning as above: setInterval's callback is not awaited by
         // anyone, so a thrown/rejected heartbeat call must be caught here.
@@ -59,7 +60,12 @@ export function useFocusTimer(activityId: string) {
 
   async function end() {
     if (!sessionIdRef.current) return 0;
-    const { verifiedSeconds } = await endSession(sessionIdRef.current);
+    const id = sessionIdRef.current;
+    const { verifiedSeconds } = await endSession(id);
+    // Clear the session id so the still-running heartbeat interval's guard
+    // (`!sessionIdRef.current`) stops it from firing against an already-
+    // ended session if the user lingers on the result view.
+    sessionIdRef.current = null;
     setElapsedSeconds(verifiedSeconds);
     return verifiedSeconds;
   }
