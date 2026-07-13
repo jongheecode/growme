@@ -27,6 +27,22 @@ describe('POST /api/auth/signup', () => {
     });
     expect(res.status).toBe(409);
   });
+
+  it('rejects signup with missing email', async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      password: 'password123',
+      nickname: '테스터',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects signup with missing password', async () => {
+    const res = await request(app).post('/api/auth/signup').send({
+      email: 'nopassword@example.com',
+      nickname: '테스터',
+    });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('POST /api/auth/login', () => {
@@ -55,5 +71,19 @@ describe('POST /api/auth/login', () => {
       password: 'wrongpass',
     });
     expect(res.status).toBe(401);
+  });
+
+  it('rejects login with missing email', async () => {
+    const res = await request(app).post('/api/auth/login').send({
+      password: 'password123',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects login with missing password', async () => {
+    const res = await request(app).post('/api/auth/login').send({
+      email: 'someone@example.com',
+    });
+    expect(res.status).toBe(400);
   });
 });
