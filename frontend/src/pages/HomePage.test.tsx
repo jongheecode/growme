@@ -5,7 +5,7 @@ import HomePage from './HomePage';
 
 describe('HomePage', () => {
   it('shows the current stage and category', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ currentGauge: 3700, stage: 1, dominantCategory: 'STUDY' }),
     }) as any;

@@ -4,7 +4,7 @@ import HistoryPage from './HistoryPage';
 
 describe('HistoryPage', () => {
   it('renders history entries', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [{ date: '2026-07-13', category: 'STUDY', verifiedSeconds: 600 }],
     }) as any;

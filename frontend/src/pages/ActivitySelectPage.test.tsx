@@ -5,7 +5,7 @@ import ActivitySelectPage from './ActivitySelectPage';
 
 describe('ActivitySelectPage', () => {
   it('lists existing activities and creates a new one', async () => {
-    global.fetch = vi
+    globalThis.fetch = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,

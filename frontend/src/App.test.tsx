@@ -4,7 +4,7 @@ import App from './App';
 
 describe('App', () => {
   it('renders the home page', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ currentGauge: 3700, stage: 1, dominantCategory: 'STUDY' }),
     }) as any;

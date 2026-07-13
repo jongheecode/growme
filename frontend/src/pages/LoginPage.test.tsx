@@ -6,7 +6,7 @@ import LoginPage from './LoginPage';
 
 describe('LoginPage', () => {
   it('submits email and password to login', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'abc', user: { id: '1', email: 'a@b.com', nickname: 'A' } }),
     }) as any;
