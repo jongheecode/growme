@@ -10,7 +10,7 @@ export function issueToken(userId: string) {
   return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 }
 
-function isNonEmptyString(value: unknown): value is string {
+export function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
