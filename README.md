@@ -10,6 +10,15 @@
 
 프론트엔드는 React(PWA), 백엔드는 Node.js + Express, DB는 PostgreSQL(Prisma)입니다.
 
+## 실행
+
+```
+cd backend && npm install && npm run dev
+cd frontend && npm install && npm run dev
+```
+
+백엔드는 로컬 PostgreSQL(`DATABASE_URL`)이 필요합니다. `.env.example` 참고.
+
 ## 상태
 
-기획/설계 단계. 자세한 내용은 [설계 문서](docs/superpowers/specs/2026-07-13-growme-design.md), 구현 계획은 [구현 계획 문서](docs/superpowers/plans/2026-07-13-growme-mvp.md) 참고.
+MVP 기능 구현 완료 (인증, 활동, 타이머 세션, 꾸미 성장/퇴화, 히스토리, PWA). 스타일링은 아직 진행 전.
