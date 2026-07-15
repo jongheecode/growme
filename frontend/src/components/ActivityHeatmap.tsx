@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { getHistory } from '../api/history';
+import { useDailyTotals } from '../hooks/useDailyTotals';
 
 const DAYS = 28;
 
@@ -22,26 +21,7 @@ function lastNDays(n: number): string[] {
 }
 
 export default function ActivityHeatmap() {
-  const [totalsByDate, setTotalsByDate] = useState<Record<string, number>>({});
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    async function load() {
-      try {
-        // 'weekly' range returns the last 4 weeks of entries, which is what a
-        // 28-day heatmap needs (there's no separate "monthly" range on the API).
-        const entries = await getHistory('weekly');
-        const totals: Record<string, number> = {};
-        for (const e of entries) {
-          totals[e.date] = (totals[e.date] ?? 0) + e.verifiedSeconds;
-        }
-        setTotalsByDate(totals);
-      } catch {
-        setError('히트맵을 불러오지 못했어요');
-      }
-    }
-    load();
-  }, []);
+  const { totalsByDate, error } = useDailyTotals('weekly');
 
   if (error) return <p className="text-sm text-coral-dark">{error}</p>;
 
