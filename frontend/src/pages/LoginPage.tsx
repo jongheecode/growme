@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login as loginApi } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import { KkumiCharacter } from '../components/KkumiCharacter';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,11 +23,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream px-6">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white rounded-card shadow-sm p-8 space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-cream px-6 relative overflow-hidden">
+      <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-mint-light opacity-60" />
+      <div className="absolute -bottom-14 -right-14 w-56 h-56 rounded-full bg-honey/30" />
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full max-w-sm bg-white rounded-card shadow-sm p-8 space-y-4"
+      >
         <div className="text-center mb-2">
-          <p className="text-4xl">🌱</p>
-          <h1 className="text-2xl font-bold text-coral-dark mt-2">그로우미</h1>
+          <div className="w-20 h-20 mx-auto">
+            <KkumiCharacter stage={0} category="ETC" />
+          </div>
+          <h1 className="text-2xl font-display text-coral-dark mt-2">그로우미</h1>
           <p className="text-sm text-ink-soft mt-1">몰입한 시간만큼, 꾸미가 자라요</p>
         </div>
         <div>
@@ -54,7 +62,7 @@ export default function LoginPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-coral hover:bg-coral-dark text-white font-semibold rounded-full py-3 transition-colors"
+          className="w-full bg-coral hover:bg-coral-dark text-white font-display text-lg rounded-full py-3 transition-colors"
         >
           로그인
         </button>
