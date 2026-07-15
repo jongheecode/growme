@@ -1,10 +1,11 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login as loginApi } from '../api/auth';
+import { signup as signupApi } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import { KkumiCharacter } from '../components/KkumiCharacter';
 
-export default function LoginPage() {
+export default function SignupPage() {
+  const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,11 +15,11 @@ export default function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const { token } = await loginApi(email, password);
+      const { token } = await signupApi(email, password, nickname);
       login(token);
       navigate('/');
     } catch {
-      setError('로그인에 실패했어요');
+      setError('회원가입에 실패했어요');
     }
   }
 
@@ -34,8 +35,19 @@ export default function LoginPage() {
           <div className="w-20 h-20 mx-auto">
             <KkumiCharacter stage={0} category="ETC" />
           </div>
-          <h1 className="text-2xl font-display text-coral-dark mt-2">그로우미</h1>
+          <h1 className="text-2xl font-display text-coral-dark mt-2">그로우미 시작하기</h1>
           <p className="text-sm text-ink-soft mt-1">몰입한 시간만큼, 꾸미가 자라요</p>
+        </div>
+        <div>
+          <label htmlFor="nickname" className="block text-sm font-medium text-ink-soft mb-1">
+            닉네임
+          </label>
+          <input
+            id="nickname"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            className="w-full rounded-xl border border-cream-dark px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-coral/40"
+          />
         </div>
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-1">
@@ -64,13 +76,13 @@ export default function LoginPage() {
           type="submit"
           className="w-full bg-coral hover:bg-coral-dark text-white font-display text-lg rounded-full py-3 transition-colors"
         >
-          로그인
+          회원가입
         </button>
         {error && <p className="text-sm text-coral-dark text-center">{error}</p>}
         <p className="text-sm text-ink-soft text-center">
-          아직 계정이 없으신가요?{' '}
-          <Link to="/signup" className="text-coral-dark font-medium hover:underline">
-            회원가입
+          이미 계정이 있으신가요?{' '}
+          <Link to="/login" className="text-coral-dark font-medium hover:underline">
+            로그인
           </Link>
         </p>
       </form>
