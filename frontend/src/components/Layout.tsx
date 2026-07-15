@@ -14,8 +14,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-cream">
       <header className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-cream-dark">
-        <Link to="/" className="text-lg font-bold text-coral-dark">
-          🌱 그로우미
+        <Link to="/" className="text-lg font-display text-coral-dark">
+          그로우미
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-ink-soft">
           <Link to="/" className="hover:text-coral-dark transition-colors">
