@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import ActivitySelectPage from './ActivitySelectPage';
 
 describe('ActivitySelectPage', () => {
@@ -17,13 +18,17 @@ describe('ActivitySelectPage', () => {
       });
 
     render(
-      <MemoryRouter>
-        <ActivitySelectPage />
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter>
+          <ActivitySelectPage />
+        </MemoryRouter>
+      </AuthProvider>
     );
 
+    // The category pill also renders "독서" (READING's label), so the activity
+    // is looked up via its button's accessible name instead of a bare text match.
     await waitFor(() => {
-      expect(screen.getByText('독서')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /독서/ })).toBeInTheDocument();
     });
 
     fireEvent.change(screen.getByLabelText('활동 이름'), { target: { value: '새 활동' } });
@@ -42,9 +47,11 @@ describe('ActivitySelectPage', () => {
     });
 
     render(
-      <MemoryRouter>
-        <ActivitySelectPage />
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter>
+          <ActivitySelectPage />
+        </MemoryRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {

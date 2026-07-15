@@ -4,9 +4,14 @@ import App from './App';
 
 describe('App', () => {
   it('renders the home page', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ currentGauge: 3700, stage: 1, dominantCategory: 'STUDY' }),
+    globalThis.fetch = vi.fn((url: string) => {
+      if (url.includes('/history')) {
+        return Promise.resolve({ ok: true, json: async () => [] });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ currentGauge: 3700, stage: 1, dominantCategory: 'STUDY' }),
+      });
     }) as any;
 
     render(<App />);
