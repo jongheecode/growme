@@ -8,7 +8,7 @@ interface Tint {
 // ETC keeps the original mint/teal from the reference art; other categories
 // get their own hue so the dominant-category visual difference (design doc's
 // "카테고리 비중으로 외형이 결정된다") is visible even while stage 0-3 art is shared.
-const CATEGORY_TINT: Record<Category, Tint> = {
+export const CATEGORY_TINT: Record<Category, Tint> = {
   EXERCISE: { light: '#FFAB91', dark: '#FF8A65' },
   STUDY: { light: '#90CAF9', dark: '#64B5F6' },
   READING: { light: '#CE93D8', dark: '#BA68C8' },

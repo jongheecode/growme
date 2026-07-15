@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, listActivities, createActivity } from '../api/activities';
 import Layout from '../components/Layout';
+import { CATEGORY_TINT } from '../components/KkumiCharacter';
+import { DumbbellIcon } from '../components/icons/DumbbellIcon';
+import { PencilIcon } from '../components/icons/PencilIcon';
+import { OpenBookIcon } from '../components/icons/OpenBookIcon';
+import { StarIcon } from '../components/icons/StarIcon';
 
 const CATEGORIES: Activity['category'][] = ['EXERCISE', 'STUDY', 'READING', 'ETC'];
 const CATEGORY_LABEL: Record<Activity['category'], string> = {
@@ -9,6 +14,12 @@ const CATEGORY_LABEL: Record<Activity['category'], string> = {
   STUDY: '학업',
   READING: '독서',
   ETC: '기타',
+};
+const CATEGORY_ICON: Record<Activity['category'], typeof DumbbellIcon> = {
+  EXERCISE: DumbbellIcon,
+  STUDY: PencilIcon,
+  READING: OpenBookIcon,
+  ETC: StarIcon,
 };
 
 export default function ActivitySelectPage() {
@@ -51,22 +62,32 @@ export default function ActivitySelectPage() {
   return (
     <Layout>
       <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-xl font-bold text-coral-dark text-center">어떤 활동을 할까요?</h1>
+        <h1 className="text-xl font-display text-coral-dark text-center">어떤 활동을 할까요?</h1>
 
         <ul className="space-y-2">
-          {activities.map((a) => (
-            <li key={a.id}>
-              <button
-                onClick={() => navigate(`/timer/${a.id}`)}
-                className="w-full flex items-center justify-between bg-white rounded-card shadow-sm px-5 py-4 hover:shadow-md transition-shadow text-left"
-              >
-                <span className="font-medium text-ink">{a.name}</span>
-                <span className="text-xs font-semibold text-mint-dark bg-mint-light px-2 py-1 rounded-full">
-                  {CATEGORY_LABEL[a.category]}
-                </span>
-              </button>
-            </li>
-          ))}
+          {activities.map((a) => {
+            const Icon = CATEGORY_ICON[a.category];
+            const tint = CATEGORY_TINT[a.category];
+            return (
+              <li key={a.id}>
+                <button
+                  onClick={() => navigate(`/timer/${a.id}`)}
+                  className="w-full flex items-center gap-3 bg-white rounded-card shadow-sm px-5 py-4 hover:shadow-md transition-shadow text-left"
+                >
+                  <span
+                    className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
+                    style={{ backgroundColor: tint.light }}
+                  >
+                    <Icon color={tint.dark} className="w-5 h-5" />
+                  </span>
+                  <span className="font-medium text-ink flex-1">{a.name}</span>
+                  <span className="text-xs font-semibold text-mint-dark bg-mint-light px-2 py-1 rounded-full">
+                    {CATEGORY_LABEL[a.category]}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="bg-white rounded-card shadow-sm p-6 space-y-3">
@@ -96,7 +117,7 @@ export default function ActivitySelectPage() {
           </select>
           <button
             onClick={handleCreate}
-            className="w-full bg-coral hover:bg-coral-dark text-white font-semibold rounded-full py-3 transition-colors"
+            className="w-full bg-coral hover:bg-coral-dark text-white font-display text-lg rounded-full py-3 transition-colors"
           >
             활동 만들기
           </button>

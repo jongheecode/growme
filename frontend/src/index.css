@@ -14,6 +14,8 @@
   --color-ink-soft: #8a7f84;
 
   --font-sans: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-display: 'Do Hyeon', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
+  --color-honey-dark: #c98a00;
 
   --radius-card: 1.5rem;
 }
