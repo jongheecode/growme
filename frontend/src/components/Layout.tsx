@@ -24,12 +24,15 @@ export default function Layout({ children }: { children: ReactNode }) {
           <Link to="/history" className="hover:text-coral-dark transition-colors">
             히스토리
           </Link>
+          <Link to="/profile" className="hover:text-coral-dark transition-colors">
+            프로필
+          </Link>
           <button onClick={handleLogout} className="hover:text-coral-dark transition-colors">
             로그아웃
           </button>
         </nav>
       </header>
-      <main className="flex flex-col items-center px-6 py-10">{children}</main>
+      <main className="flex flex-col items-center px-6 md:px-10 py-10 max-w-6xl mx-auto w-full">{children}</main>
     </div>
   );
 }

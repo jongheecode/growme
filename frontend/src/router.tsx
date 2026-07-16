@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import ActivitySelectPage from './pages/ActivitySelectPage';
 import TimerPage from './pages/TimerPage';
 import HistoryPage from './pages/HistoryPage';
+import ProfilePage from './pages/ProfilePage';
 
 const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
   { path: '/activities', element: <ActivitySelectPage /> },
   { path: '/timer/:activityId', element: <TimerPage /> },
   { path: '/history', element: <HistoryPage /> },
+  { path: '/profile', element: <ProfilePage /> },
 ]);
 
 export default router;
