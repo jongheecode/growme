@@ -87,3 +87,45 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('POST /api/auth/change-password', () => {
+  async function signupAndToken() {
+    const res = await request(app).post('/api/auth/signup').send({
+      email: 'pw@example.com',
+      password: 'password123',
+      nickname: '비번테스터',
+    });
+    return res.body.token as string;
+  }
+
+  it('changes the password when currentPassword is correct', async () => {
+    const token = await signupAndToken();
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'password123', newPassword: 'newpassword456' });
+    expect(res.status).toBe(200);
+
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'pw@example.com',
+      password: 'newpassword456',
+    });
+    expect(loginRes.status).toBe(200);
+  });
+
+  it('rejects when currentPassword is wrong', async () => {
+    const token = await signupAndToken();
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'wrongpassword', newPassword: 'newpassword456' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects without an auth token', async () => {
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .send({ currentPassword: 'password123', newPassword: 'newpassword456' });
+    expect(res.status).toBe(401);
+  });
+});
