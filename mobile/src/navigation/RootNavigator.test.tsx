@@ -10,7 +10,7 @@ describe('RootNavigator', () => {
         <RootNavigator />
       </AuthProvider>
     );
-    await waitFor(() => expect(screen.getByText('로그인 화면 준비 중입니다')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('그로우미')).toBeTruthy());
   });
 
   it('shows the main tabs when a token is stored', async () => {

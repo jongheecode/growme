@@ -1,18 +1,11 @@
 import { View, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LoginScreen from '../screens/LoginScreen';
 
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
 };
-
-function LoginPlaceholder() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>로그인 화면 준비 중입니다</Text>
-    </View>
-  );
-}
 
 function SignupPlaceholder() {
   return (
@@ -27,7 +20,7 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 export default function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginPlaceholder} />
+      <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupPlaceholder} />
     </Stack.Navigator>
   );
