@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [bioDraft, setBioDraft] = useState('');
   const [bioSaved, setBioSaved] = useState(false);
+  const [bioSaveError, setBioSaveError] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
@@ -37,12 +38,13 @@ export default function ProfilePage() {
   async function handleSaveBio(e: FormEvent) {
     e.preventDefault();
     setBioSaved(false);
+    setBioSaveError('');
     try {
       const updated = await updateMe({ bio: bioDraft });
       setProfile(updated);
       setBioSaved(true);
     } catch {
-      setError('한줄소개를 저장하지 못했어요');
+      setBioSaveError('한줄소개를 저장하지 못했어요');
     }
   }
 
@@ -120,6 +122,7 @@ export default function ProfilePage() {
             저장
           </button>
           {bioSaved && <p className="text-sm text-mint-dark">저장했어요</p>}
+          {bioSaveError && <p className="text-sm text-coral-dark">{bioSaveError}</p>}
         </form>
 
         <div className="bg-white rounded-card shadow-sm p-6">
