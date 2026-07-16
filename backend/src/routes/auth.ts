@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
+import { requireAuth, AuthedRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -54,6 +55,28 @@ router.post('/login', async (req, res) => {
     }
     const token = issueToken(user.id);
     res.json({ token, user: { id: user.id, email: user.email, nickname: user.nickname } });
+  } catch (err) {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+router.post('/change-password', requireAuth, async (req: AuthedRequest, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!isNonEmptyString(currentPassword) || !isNonEmptyString(newPassword)) {
+    return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+    if (!user || !user.passwordHash) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'internal server error' });
   }

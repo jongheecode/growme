@@ -7,6 +7,7 @@ import activitiesRouter from './routes/activities';
 import sessionsRouter from './routes/sessions';
 import growthRouter from './routes/growth';
 import historyRouter from './routes/history';
+import usersRouter from './routes/users';
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,7 @@ app.use('/api/activities', activitiesRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/growth', growthRouter);
 app.use('/api/history', historyRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
