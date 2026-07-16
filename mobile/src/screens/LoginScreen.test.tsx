@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import * as authApi from '../api/auth';
 import LoginScreen from './LoginScreen';
+import SignupScreen from './SignupScreen';
 
 jest.mock('../api/auth');
 
@@ -15,7 +15,7 @@ function renderLogin() {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup">{() => <Text>signup-screen</Text>}</Stack.Screen>
+          <Stack.Screen name="Signup" component={SignupScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
@@ -48,6 +48,6 @@ describe('LoginScreen', () => {
   it('navigates to signup', async () => {
     renderLogin();
     fireEvent.press(screen.getByText('회원가입'));
-    await waitFor(() => expect(screen.getByText('signup-screen')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('회원가입')).toBeTruthy());
   });
 });
