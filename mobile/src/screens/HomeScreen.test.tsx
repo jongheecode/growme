@@ -6,6 +6,12 @@ import HomeScreen from './HomeScreen';
 jest.mock('../api/tasks');
 jest.mock('../api/growth');
 
+const mockSetActiveGoalId = jest.fn();
+const mockUseGoals = jest.fn();
+jest.mock('../context/GoalsContext', () => ({
+  useGoals: () => mockUseGoals(),
+}));
+
 const growthState: growthApi.GrowthState = {
   totalXp: 60,
   species: 'SPECIES_A',
@@ -15,7 +21,7 @@ const growthState: growthApi.GrowthState = {
   personality: null,
 };
 
-const task: tasksApi.Task = {
+const taskInGoalA: tasksApi.Task = {
   id: '1',
   title: '운동하기',
   category: 'EXERCISE',
@@ -25,14 +31,34 @@ const task: tasksApi.Task = {
   status: 'PENDING',
   completedAt: null,
   createdAt: new Date().toISOString(),
+  goalId: 'goal-a',
 };
+
+const taskInGoalB: tasksApi.Task = {
+  id: '2',
+  title: '독서하기',
+  category: 'READING',
+  difficulty: 'EASY',
+  xpValue: 10,
+  dueAt: new Date().toISOString(),
+  status: 'PENDING',
+  completedAt: null,
+  createdAt: new Date().toISOString(),
+  goalId: 'goal-b',
+};
+
+const goals = [
+  { id: 'goal-a', title: '운동 목표', category: 'EXERCISE' as const, createdAt: '2026-01-02T00:00:00.000Z' },
+  { id: 'goal-b', title: '독서 목표', category: 'READING' as const, createdAt: '2026-01-01T00:00:00.000Z' },
+];
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (tasksApi.listTasks as jest.Mock).mockResolvedValue([task]);
+  (tasksApi.listTasks as jest.Mock).mockResolvedValue([taskInGoalA, taskInGoalB]);
   (growthApi.getGrowth as jest.Mock).mockResolvedValue(growthState);
-  (tasksApi.completeTask as jest.Mock).mockResolvedValue({ ...task, status: 'COMPLETED' });
-  (tasksApi.createTask as jest.Mock).mockResolvedValue({ ...task, id: '2', title: '새 할일' });
+  (tasksApi.completeTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, status: 'COMPLETED' });
+  (tasksApi.createTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, id: '3', title: '새 할일' });
+  mockUseGoals.mockReturnValue({ goals, activeGoalId: 'goal-a', setActiveGoalId: mockSetActiveGoalId });
 });
 
 describe('HomeScreen', () => {
@@ -50,6 +76,21 @@ describe('HomeScreen', () => {
     expect(screen.getByTestId('kkumi-species-label')).toBeTruthy();
   });
 
+  it("shows only the active goal's tasks in the task sheet", async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    expect(screen.getByText(/운동하기/)).toBeTruthy();
+    expect(screen.queryByText(/독서하기/)).toBeNull();
+  });
+
+  it('switches the active goal when a chip is pressed', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('goal-chip-goal-b')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('goal-chip-goal-b'));
+    expect(mockSetActiveGoalId).toHaveBeenCalledWith('goal-b');
+  });
+
   it('completes a task from the sheet and refreshes growth', async () => {
     render(<HomeScreen />);
     await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
@@ -59,14 +100,14 @@ describe('HomeScreen', () => {
     await waitFor(() => expect(growthApi.getGrowth).toHaveBeenCalledTimes(2));
   });
 
-  it('creates a task from the sheet form and refreshes the list', async () => {
+  it('creates a task from the sheet form tagged with the active goal', async () => {
     render(<HomeScreen />);
     await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
     fireEvent.press(screen.getByTestId('task-fab'));
     fireEvent.changeText(screen.getByTestId('new-task-title'), '새 할일');
     fireEvent.press(screen.getByTestId('add-task-submit'));
     await waitFor(() =>
-      expect(tasksApi.createTask).toHaveBeenCalledWith('새 할일', 'ETC', 'EASY', 'TODAY')
+      expect(tasksApi.createTask).toHaveBeenCalledWith('새 할일', 'ETC', 'EASY', 'TODAY', 'goal-a')
     );
     await waitFor(() => expect(tasksApi.listTasks).toHaveBeenCalledTimes(2));
   });
