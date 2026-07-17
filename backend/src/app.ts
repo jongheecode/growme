@@ -5,7 +5,6 @@ import oauthGoogleRouter from './routes/oauthGoogle';
 import oauthKakaoRouter from './routes/oauthKakao';
 import activitiesRouter from './routes/activities';
 import sessionsRouter from './routes/sessions';
-import growthRouter from './routes/growth';
 import historyRouter from './routes/history';
 import usersRouter from './routes/users';
 
@@ -17,7 +16,6 @@ app.use('/api/auth', oauthGoogleRouter);
 app.use('/api/auth', oauthKakaoRouter);
 app.use('/api/activities', activitiesRouter);
 app.use('/api/sessions', sessionsRouter);
-app.use('/api/growth', growthRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/users', usersRouter);
 

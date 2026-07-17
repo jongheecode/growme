@@ -24,9 +24,10 @@ model User {
   bio           String?
   createdAt     DateTime @default(now())
 
-  activities Activity[]
-  sessions   Session[]
-  growth     Growth?
+  activities   Activity[]
+  sessions     Session[]
+  tasks        Task[]
+  growthProfile GrowthProfile?
 
   @@unique([oauthProvider, oauthId])
 }
@@ -56,11 +57,42 @@ model Session {
   createdAt       DateTime  @default(now())
 }
 
-model Growth {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  currentGauge   Int      @default(0)
-  lastActiveDate DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum Species {
+  SPECIES_A
+  SPECIES_B
+  SPECIES_C
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  category    Category
+  difficulty  Difficulty
+  xpValue     Int
+  dueAt       DateTime
+  status      TaskStatus @default(PENDING)
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model GrowthProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  species   Species?
+  createdAt DateTime @default(now())
 }

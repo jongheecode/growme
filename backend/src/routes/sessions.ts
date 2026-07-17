@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import { applySessionToGrowth } from '../services/growth';
 import { MAX_GAP_SECONDS } from '../constants';
 import { isNonEmptyString } from './auth';
 
@@ -73,7 +72,6 @@ router.post('/:id/end', requireAuth, async (req: AuthedRequest, res) => {
     if (result.count === 0) {
       return res.status(404).json({ error: 'session not found or already ended' });
     }
-    await applySessionToGrowth(req.userId!, verifiedSeconds);
     res.json({ verifiedSeconds });
   } catch {
     res.status(500).json({ error: 'internal server error' });

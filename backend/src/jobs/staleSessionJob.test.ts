@@ -25,8 +25,5 @@ describe('closeStaleSessions', () => {
 
     const updated = await prisma.session.findUnique({ where: { id: session.id } });
     expect(updated?.endedAt).not.toBeNull();
-
-    const growth = await prisma.growth.findUnique({ where: { userId: user.id } });
-    expect(growth?.currentGauge).toBe(120);
   });
 });

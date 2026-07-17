@@ -51,7 +51,7 @@ describe('Session lifecycle', () => {
     expect(hbRes.body.verifiedSeconds).toBeGreaterThanOrEqual(29);
   });
 
-  it('ends a session and updates growth gauge', async () => {
+  it('ends a session and records verified seconds', async () => {
     const { token, activityId } = await setupUserAndActivity();
     const startRes = await request(app)
       .post('/api/sessions/start')
@@ -65,12 +65,6 @@ describe('Session lifecycle', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(endRes.status).toBe(200);
     expect(endRes.body.verifiedSeconds).toBeGreaterThanOrEqual(59);
-
-    const decoded = JSON.parse(
-      Buffer.from(token.split('.')[1], 'base64').toString()
-    );
-    const growth = await prisma.growth.findUnique({ where: { userId: decoded.userId } });
-    expect(growth?.currentGauge).toBeGreaterThanOrEqual(59);
   });
 
   it('caps the counted gap at 5 minutes', async () => {
@@ -88,7 +82,7 @@ describe('Session lifecycle', () => {
     expect(endRes.body.verifiedSeconds).toBeLessThanOrEqual(300);
   });
 
-  it('applies growth only once when two /end requests race on the same session', async () => {
+  it('prevents double ending when two /end requests race on the same session', async () => {
     const { token, activityId } = await setupUserAndActivity();
     const startRes = await request(app)
       .post('/api/sessions/start')
@@ -109,13 +103,5 @@ describe('Session lifecycle', () => {
 
     const statuses = [res1.status, res2.status].sort();
     expect(statuses).toEqual([200, 404]);
-
-    const successRes = res1.status === 200 ? res1 : res2;
-
-    const decoded = JSON.parse(
-      Buffer.from(token.split('.')[1], 'base64').toString()
-    );
-    const growth = await prisma.growth.findUnique({ where: { userId: decoded.userId } });
-    expect(growth?.currentGauge).toBe(successRes.body.verifiedSeconds);
   });
 });

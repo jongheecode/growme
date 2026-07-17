@@ -11,7 +11,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "Session","Activity","Growth","User" CASCADE'
+    'TRUNCATE "Session","Activity","User" CASCADE'
   );
 });
 
