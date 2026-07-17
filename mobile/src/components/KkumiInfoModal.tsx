@@ -37,7 +37,7 @@ export default function KkumiInfoModal({ visible, onClose, growth }: Props) {
             />
           </View>
           <Text testID="kkumi-personality-label">
-            {growth.personality ? PERSONALITY_LABEL[growth.personality.type] : '성격 파악 중'}
+            {growth.personality ? PERSONALITY_LABEL[growth.personality.type] : '성격 파악 중...'}
           </Text>
           <TouchableOpacity testID="kkumi-modal-close" onPress={onClose}>
             <Text>닫기</Text>

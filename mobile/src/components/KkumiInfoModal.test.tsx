@@ -21,10 +21,10 @@ const grownGrowth: GrowthState = {
 };
 
 describe('KkumiInfoModal', () => {
-  it('shows egg state and "성격 파악 중" when there is no personality data', () => {
+  it('shows egg state and "성격 파악 중..." when there is no personality data', () => {
     render(<KkumiInfoModal visible onClose={() => {}} growth={eggGrowth} />);
     expect(screen.getByTestId('kkumi-species-label')).toHaveTextContent('알');
-    expect(screen.getByTestId('kkumi-personality-label')).toHaveTextContent('성격 파악 중');
+    expect(screen.getByTestId('kkumi-personality-label')).toHaveTextContent('성격 파악 중...');
   });
 
   it('shows the species, stage and personality label once grown', () => {
