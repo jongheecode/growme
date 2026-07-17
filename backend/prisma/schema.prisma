@@ -27,6 +27,7 @@ model User {
   activities   Activity[]
   sessions     Session[]
   tasks        Task[]
+  goals        Goal[]
   growthProfile GrowthProfile?
 
   @@unique([oauthProvider, oauthId])
@@ -78,6 +79,8 @@ enum Species {
 model Task {
   id          String     @id @default(uuid())
   userId      String
+  goalId      String?
+  goal        Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   category    Category
@@ -95,4 +98,14 @@ model GrowthProfile {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   species   Species?
   createdAt DateTime @default(now())
+}
+
+model Goal {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  category  Category
+  createdAt DateTime @default(now())
+  tasks     Task[]
 }
