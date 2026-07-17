@@ -36,7 +36,7 @@ function isDueChoice(value: unknown): value is 'TODAY' | 'THIS_WEEK' {
 }
 
 router.post('/', requireAuth, async (req: AuthedRequest, res) => {
-  const { title, category, difficulty, dueChoice } = req.body;
+  const { title, category, difficulty, dueChoice, goalId } = req.body;
   if (!isNonEmptyString(title) || !isNonEmptyString(category) || !isNonEmptyString(difficulty) || !isNonEmptyString(dueChoice)) {
     return res.status(400).json({ error: 'title, category, difficulty and dueChoice are required' });
   }
@@ -49,10 +49,20 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   if (!isDueChoice(dueChoice)) {
     return res.status(400).json({ error: 'dueChoice must be TODAY or THIS_WEEK' });
   }
+  if (goalId !== undefined && !isNonEmptyString(goalId)) {
+    return res.status(400).json({ error: 'goalId must be a string' });
+  }
   try {
+    if (goalId) {
+      const goal = await prisma.goal.findFirst({ where: { id: goalId, userId: req.userId! } });
+      if (!goal) {
+        return res.status(400).json({ error: 'invalid goalId' });
+      }
+    }
     const task = await prisma.task.create({
       data: {
         userId: req.userId!,
+        goalId: goalId ?? null,
         title,
         category,
         difficulty,

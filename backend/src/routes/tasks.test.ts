@@ -232,3 +232,52 @@ describe('DELETE /api/tasks/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('POST /api/tasks with goalId', () => {
+  it('attaches the task to the given goal when it belongs to the user', async () => {
+    const token = await signup('taskgoal1@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const goal = await prisma.goal.create({ data: { userId: decoded.userId, title: '목표', category: 'STUDY' } });
+
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY', goalId: goal.id });
+
+    expect(res.status).toBe(201);
+    expect(res.body.goalId).toBe(goal.id);
+  });
+
+  it('rejects a goalId belonging to another user', async () => {
+    const tokenA = await signup('taskgoal2@example.com');
+    const tokenB = await signup('taskgoal3@example.com');
+    const decodedA = JSON.parse(Buffer.from(tokenA.split('.')[1], 'base64').toString());
+    const goal = await prisma.goal.create({ data: { userId: decodedA.userId, title: 'A의 목표', category: 'STUDY' } });
+
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${tokenB}`)
+      .send({ title: '할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY', goalId: goal.id });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a nonexistent goalId', async () => {
+    const token = await signup('taskgoal4@example.com');
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY', goalId: 'nonexistent-id' });
+    expect(res.status).toBe(400);
+  });
+
+  it('creates a task without a goalId as before (backward compatible)', async () => {
+    const token = await signup('taskgoal5@example.com');
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+    expect(res.status).toBe(201);
+    expect(res.body.goalId).toBeNull();
+  });
+});
