@@ -15,6 +15,7 @@ export interface Task {
   status: TaskStatus;
   completedAt: string | null;
   createdAt: string;
+  goalId: string | null;
 }
 
 export async function listTasks(): Promise<Task[]> {
@@ -27,11 +28,12 @@ export async function createTask(
   title: string,
   category: Category,
   difficulty: Difficulty,
-  dueChoice: DueChoice
+  dueChoice: DueChoice,
+  goalId?: string
 ): Promise<Task> {
   const res = await apiFetch('/api/tasks', {
     method: 'POST',
-    body: JSON.stringify({ title, category, difficulty, dueChoice }),
+    body: JSON.stringify({ title, category, difficulty, dueChoice, goalId }),
   });
   if (!res.ok) throw new Error('할일을 추가하지 못했어요');
   return res.json();

@@ -55,3 +55,27 @@ describe('deleteTask', () => {
     await expect(deleteTask('1')).resolves.toBeUndefined();
   });
 });
+
+describe('createTask with goalId', () => {
+  it('includes goalId in the request body when provided', async () => {
+    let capturedBody: string | undefined;
+    globalThis.fetch = jest.fn((_url: string, options?: RequestInit) => {
+      capturedBody = options?.body as string;
+      return Promise.resolve({ ok: true, json: async () => ({ id: '1', title: '운동하기' }) });
+    }) as unknown as typeof fetch;
+
+    await createTask('운동하기', 'EXERCISE', 'MEDIUM', 'TODAY', 'goal-1');
+    expect(JSON.parse(capturedBody!).goalId).toBe('goal-1');
+  });
+
+  it('omits goalId from the request body when not provided', async () => {
+    let capturedBody: string | undefined;
+    globalThis.fetch = jest.fn((_url: string, options?: RequestInit) => {
+      capturedBody = options?.body as string;
+      return Promise.resolve({ ok: true, json: async () => ({ id: '1', title: '운동하기' }) });
+    }) as unknown as typeof fetch;
+
+    await createTask('운동하기', 'EXERCISE', 'MEDIUM', 'TODAY');
+    expect(JSON.parse(capturedBody!).goalId).toBeUndefined();
+  });
+});
