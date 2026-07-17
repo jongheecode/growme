@@ -117,3 +117,72 @@ describe('GET /api/tasks', () => {
     expect(stored?.status).toBe('FAILED');
   });
 });
+
+describe('PATCH /api/tasks/:id/complete', () => {
+  it('completes a pending task before its deadline', async () => {
+    const token = await signup('taskcomplete1@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '완료할 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('COMPLETED');
+    expect(res.body.completedAt).not.toBeNull();
+  });
+
+  it('rejects completing an already-completed task', async () => {
+    const token = await signup('taskcomplete2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '두번 완료', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+    await request(app).patch(`/api/tasks/${createRes.body.id}/complete`).set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+  });
+
+  it('rejects completing an expired task and marks it FAILED', async () => {
+    const token = await signup('taskcomplete3@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const overdue = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '만료된 할일',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+      },
+    });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${overdue.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe('task expired');
+
+    const stored = await prisma.task.findUnique({ where: { id: overdue.id } });
+    expect(stored?.status).toBe('FAILED');
+  });
+
+  it('returns 404 for another user\'s task', async () => {
+    const tokenA = await signup('taskcomplete4@example.com');
+    const tokenB = await signup('taskcomplete5@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ title: 'A 소유', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${tokenB}`);
+    expect(res.status).toBe(404);
+  });
+});

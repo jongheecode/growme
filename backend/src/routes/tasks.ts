@@ -83,4 +83,27 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.patch('/:id/complete', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const task = await prisma.task.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!task) {
+      return res.status(404).json({ error: 'task not found' });
+    }
+    if (task.status !== 'PENDING') {
+      return res.status(409).json({ error: 'task is not pending' });
+    }
+    if (task.dueAt.getTime() < Date.now()) {
+      await prisma.task.update({ where: { id: task.id }, data: { status: 'FAILED' } });
+      return res.status(409).json({ error: 'task expired' });
+    }
+    const updated = await prisma.task.update({
+      where: { id: task.id },
+      data: { status: 'COMPLETED', completedAt: new Date() },
+    });
+    res.json(updated);
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 export default router;
