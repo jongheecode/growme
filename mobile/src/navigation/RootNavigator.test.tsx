@@ -15,11 +15,12 @@ describe('RootNavigator', () => {
 
   it('shows the main tabs when a token is stored', async () => {
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce('stored-token');
+    globalThis.fetch = jest.fn(() => Promise.reject(new Error('no network in this test'))) as unknown as typeof fetch;
     render(
       <AuthProvider>
         <RootNavigator />
       </AuthProvider>
     );
-    await waitFor(() => expect(screen.getByText('홈 화면 준비 중입니다')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('히스토리')).toBeTruthy());
   });
 });
