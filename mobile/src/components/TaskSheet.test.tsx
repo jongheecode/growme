@@ -3,8 +3,8 @@ import TaskSheet from './TaskSheet';
 import { Task } from '../api/tasks';
 
 const tasks: Task[] = [
-  { id: '1', title: '운동하기', category: 'EXERCISE', difficulty: 'EASY', xpValue: 10, dueAt: new Date().toISOString(), status: 'PENDING', completedAt: null, createdAt: new Date().toISOString() },
-  { id: '2', title: '독서 30분', category: 'READING', difficulty: 'MEDIUM', xpValue: 20, dueAt: new Date().toISOString(), status: 'COMPLETED', completedAt: new Date().toISOString(), createdAt: new Date().toISOString() },
+  { id: '1', title: '운동하기', category: 'EXERCISE', difficulty: 'EASY', xpValue: 10, dueAt: new Date().toISOString(), status: 'PENDING', completedAt: null, createdAt: new Date().toISOString(), goalId: null },
+  { id: '2', title: '독서 30분', category: 'READING', difficulty: 'MEDIUM', xpValue: 20, dueAt: new Date().toISOString(), status: 'COMPLETED', completedAt: new Date().toISOString(), createdAt: new Date().toISOString(), goalId: null },
 ];
 
 describe('TaskSheet', () => {
