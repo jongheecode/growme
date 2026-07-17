@@ -186,3 +186,49 @@ describe('PATCH /api/tasks/:id/complete', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('DELETE /api/tasks/:id', () => {
+  it('deletes a pending task', async () => {
+    const token = await signup('taskdelete1@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '지울 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+
+    const res = await request(app)
+      .delete(`/api/tasks/${createRes.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(204);
+
+    const stored = await prisma.task.findUnique({ where: { id: createRes.body.id } });
+    expect(stored).toBeNull();
+  });
+
+  it('rejects deleting a completed task', async () => {
+    const token = await signup('taskdelete2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '완료된 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+    await request(app).patch(`/api/tasks/${createRes.body.id}/complete`).set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app)
+      .delete(`/api/tasks/${createRes.body.id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 for another user\'s task', async () => {
+    const tokenA = await signup('taskdelete3@example.com');
+    const tokenB = await signup('taskdelete4@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ title: 'A 소유', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+
+    const res = await request(app)
+      .delete(`/api/tasks/${createRes.body.id}`)
+      .set('Authorization', `Bearer ${tokenB}`);
+    expect(res.status).toBe(404);
+  });
+});

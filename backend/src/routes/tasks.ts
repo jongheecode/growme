@@ -106,4 +106,20 @@ router.patch('/:id/complete', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.delete('/:id', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const task = await prisma.task.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!task) {
+      return res.status(404).json({ error: 'task not found' });
+    }
+    if (task.status !== 'PENDING') {
+      return res.status(400).json({ error: 'only pending tasks can be deleted' });
+    }
+    await prisma.task.delete({ where: { id: task.id } });
+    res.status(204).send();
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 export default router;
