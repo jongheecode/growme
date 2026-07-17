@@ -66,4 +66,21 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.get('/', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const now = new Date();
+    await prisma.task.updateMany({
+      where: { userId: req.userId!, status: 'PENDING', dueAt: { lt: now } },
+      data: { status: 'FAILED' },
+    });
+    const tasks = await prisma.task.findMany({
+      where: { userId: req.userId! },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(tasks);
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 export default router;

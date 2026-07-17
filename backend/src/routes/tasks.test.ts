@@ -2,6 +2,7 @@ import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import app from '../app';
 import { computeDueAt } from './tasks';
+import { prisma } from '../db';
 
 async function signup(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
@@ -72,5 +73,47 @@ describe('POST /api/tasks', () => {
   it('requires authentication', async () => {
     const res = await request(app).post('/api/tasks').send({});
     expect(res.status).toBe(401);
+  });
+});
+
+describe('GET /api/tasks', () => {
+  it('lists only the authenticated user\'s tasks', async () => {
+    const tokenA = await signup('tasklist1@example.com');
+    const tokenB = await signup('tasklist2@example.com');
+    await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ title: 'A의 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+    await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${tokenB}`)
+      .send({ title: 'B의 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+
+    const res = await request(app).get('/api/tasks').set('Authorization', `Bearer ${tokenA}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].title).toBe('A의 할일');
+  });
+
+  it('flips overdue PENDING tasks to FAILED on read', async () => {
+    const token = await signup('tasklist3@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const overdue = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '지난 할일',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+      },
+    });
+
+    const res = await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.find((t: { id: string }) => t.id === overdue.id).status).toBe('FAILED');
+
+    const stored = await prisma.task.findUnique({ where: { id: overdue.id } });
+    expect(stored?.status).toBe('FAILED');
   });
 });
