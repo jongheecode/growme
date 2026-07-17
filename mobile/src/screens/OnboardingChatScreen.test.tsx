@@ -37,7 +37,30 @@ describe('OnboardingChatScreen', () => {
     fireEvent.press(screen.getByTestId('chat-send'));
 
     await waitFor(() => expect(screen.getByTestId('goal-confirmed')).toHaveTextContent('매일 달리기'));
-    expect(mockRefreshGoals).toHaveBeenCalled();
+    expect(mockRefreshGoals).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByTestId('goal-confirmed-continue'));
+    await waitFor(() => expect(mockRefreshGoals).toHaveBeenCalled());
+  });
+
+  it('shows a loading indicator while waiting for the assistant reply', async () => {
+    let resolvePromise: (v: any) => void;
+    (goalsApi.sendGoalChatMessage as jest.Mock).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolvePromise = resolve;
+      })
+    );
+    render(<OnboardingChatScreen canCancel={false} onDone={() => {}} />);
+
+    fireEvent.changeText(screen.getByTestId('chat-input'), '안녕');
+    fireEvent.press(screen.getByTestId('chat-send'));
+
+    await waitFor(() => expect(screen.getByTestId('chat-sending')).toBeTruthy());
+
+    resolvePromise!({ reply: '요즘 어때?', goalSet: false });
+
+    await waitFor(() => expect(screen.getByTestId('chat-message-1')).toHaveTextContent('요즘 어때?'));
+    expect(screen.queryByTestId('chat-sending')).toBeNull();
   });
 
   it('shows a retry button on failure and resends the same last message without duplicating it', async () => {

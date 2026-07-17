@@ -24,7 +24,6 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
       setMessages([...nextMessages, { role: 'assistant', content: result.reply }]);
       if (result.goalSet && result.goal) {
         setGoalConfirmed(result.goal.title);
-        await refreshGoals();
       }
     } catch {
       setError('메시지를 보내지 못했어요');
@@ -51,7 +50,13 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text>목표가 생겼어요:</Text>
         <Text testID="goal-confirmed">{goalConfirmed}</Text>
-        <TouchableOpacity testID="goal-confirmed-continue" onPress={onDone}>
+        <TouchableOpacity
+          testID="goal-confirmed-continue"
+          onPress={async () => {
+            await refreshGoals();
+            onDone();
+          }}
+        >
           <Text>계속하기</Text>
         </TouchableOpacity>
       </View>
@@ -81,6 +86,7 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
           </TouchableOpacity>
         </View>
       ) : null}
+      {sending ? <Text testID="chat-sending">꾸미가 생각하고 있어요...</Text> : null}
       <TextInput testID="chat-input" value={input} onChangeText={setInput} placeholder="메시지를 입력하세요" />
       <TouchableOpacity testID="chat-send" onPress={handleSend}>
         <Text>전송</Text>

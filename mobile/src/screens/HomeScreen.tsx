@@ -36,6 +36,10 @@ export default function HomeScreen() {
     } catch (err) {
       failureMessage = err instanceof Error ? err.message : '할일을 완료하지 못했어요';
     }
+    // refresh() runs regardless of outcome so an expired task's auto-fail (flipped
+    // server-side on the next GET /api/tasks) shows up immediately; refresh() clears
+    // any stale error internally, so a failure message here must be set *after* it
+    // returns or it would be wiped before ever rendering.
     await refresh();
     if (failureMessage) setError(failureMessage);
   }
