@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.1",
     "@prisma/client": "^5.20.0",
     "axios": "^1.18.1",
     "bcrypt": "^5.1.1",
