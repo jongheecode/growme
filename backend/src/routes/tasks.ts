@@ -89,6 +89,22 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
       where: { userId: req.userId! },
       orderBy: { createdAt: 'desc' },
     });
+
+    const needsReaction = tasks.filter((t) => t.status === 'FAILED' && t.reactionText === null);
+    if (needsReaction.length > 0) {
+      const personality = await computePersonality(req.userId!);
+      for (const t of needsReaction) {
+        try {
+          const reactionText = await generateReaction(t, personality, 'FAILED');
+          const updated = await prisma.task.update({ where: { id: t.id }, data: { reactionText } });
+          const idx = tasks.findIndex((x) => x.id === t.id);
+          tasks[idx] = updated;
+        } catch {
+          // 실패한 건은 reactionText가 계속 null이라 다음 GET에서 자동 재시도된다.
+        }
+      }
+    }
+
     res.json(tasks);
   } catch {
     res.status(500).json({ error: 'internal server error' });

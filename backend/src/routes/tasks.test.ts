@@ -131,6 +131,71 @@ describe('GET /api/tasks', () => {
     const stored = await prisma.task.findUnique({ where: { id: overdue.id } });
     expect(stored?.status).toBe('FAILED');
   });
+
+  it('generates and stores a reaction for a newly-FAILED task', async () => {
+    const token = await signup('taskfailreact1@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const overdue = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '실패할 할일',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+      },
+    });
+
+    const res = await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const found = res.body.find((t: { id: string }) => t.id === overdue.id);
+    expect(found.status).toBe('FAILED');
+    expect(found.reactionText).toBe('잘했어!');
+    expect(found.reactionShownAt).toBeNull();
+  });
+
+  it('does not call Anthropic again for a FAILED task that already has a reaction', async () => {
+    const token = await signup('taskfailreact2@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '이미 반응 있음',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+      },
+    });
+
+    await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+
+    await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves reactionText null when Anthropic fails, without breaking the list response', async () => {
+    mockCreate.mockRejectedValue(new Error('rate limited'));
+    const token = await signup('taskfailreact3@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const overdue = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '반응 생성 실패',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+      },
+    });
+
+    const res = await request(app).get('/api/tasks').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const found = res.body.find((t: { id: string }) => t.id === overdue.id);
+    expect(found.status).toBe('FAILED');
+    expect(found.reactionText).toBeNull();
+  });
 });
 
 describe('PATCH /api/tasks/:id/complete', () => {
