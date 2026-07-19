@@ -7,6 +7,7 @@ jest.mock('../api/tasks');
 jest.mock('../api/growth');
 import * as goalsApi from '../api/goals';
 jest.mock('../api/goals');
+jest.mock('../api/sessions');
 
 const mockSetActiveGoalId = jest.fn();
 const mockUseGoals = jest.fn();
@@ -196,5 +197,35 @@ describe('HomeScreen', () => {
     await waitFor(() =>
       expect(tasksApi.createTask).toHaveBeenCalledWith('단어 암기', 'STUDY', 'MEDIUM', 'TODAY', 'goal-a')
     );
+  });
+
+  it('opens the mission modal when a task row is tapped', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-row-1'));
+    expect(screen.getByTestId('mission-modal')).toBeTruthy();
+  });
+
+  it('closes the mission modal without completing the task', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-row-1'));
+    fireEvent.press(screen.getByTestId('mission-close'));
+    await waitFor(() => expect(screen.queryByTestId('mission-modal')).toBeNull());
+    expect(tasksApi.completeTask).not.toHaveBeenCalled();
+  });
+
+  it('completes a task from the mission modal and shows the reaction', async () => {
+    (tasksApi.completeTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, status: 'COMPLETED', reactionText: '잘했어!' });
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-row-1'));
+    fireEvent.press(screen.getByTestId('mission-complete'));
+    await waitFor(() => expect(tasksApi.completeTask).toHaveBeenCalledWith('1'));
+    await waitFor(() => expect(screen.getByTestId('reaction-text')).toHaveTextContent('잘했어!'));
+    expect(screen.queryByTestId('mission-modal')).toBeNull();
   });
 });

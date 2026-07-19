@@ -7,6 +7,7 @@ import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
 import KkumiInfoModal from '../components/KkumiInfoModal';
 import ReactionModal from '../components/ReactionModal';
+import MissionModal from '../components/MissionModal';
 import TaskSheet from '../components/TaskSheet';
 
 export default function HomeScreen() {
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const [immediateReaction, setImmediateReaction] = useState<{ text: string; outcome: 'COMPLETED' | 'FAILED' } | null>(null);
   const [suggestions, setSuggestions] = useState<TaskSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -157,6 +159,14 @@ export default function HomeScreen() {
           onDismiss={immediateReaction ? () => setImmediateReaction(null) : handleDismissQueuedReaction}
         />
       ) : null}
+      <MissionModal
+        task={selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onComplete={(id) => {
+          setSelectedTask(null);
+          handleComplete(id);
+        }}
+      />
       <TaskSheet
         tasks={visibleTasks}
         onComplete={handleComplete}
@@ -166,6 +176,7 @@ export default function HomeScreen() {
         onRequestSuggestions={handleRequestSuggestions}
         onAcceptSuggestion={handleAcceptSuggestion}
         onRejectSuggestion={handleRejectSuggestion}
+        onOpenTask={(t) => setSelectedTask(t)}
       />
     </View>
   );
