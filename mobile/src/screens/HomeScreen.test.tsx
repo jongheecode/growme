@@ -32,6 +32,8 @@ const taskInGoalA: tasksApi.Task = {
   completedAt: null,
   createdAt: new Date().toISOString(),
   goalId: 'goal-a',
+  reactionText: null,
+  reactionShownAt: null,
 };
 
 const taskInGoalB: tasksApi.Task = {
@@ -45,6 +47,8 @@ const taskInGoalB: tasksApi.Task = {
   completedAt: null,
   createdAt: new Date().toISOString(),
   goalId: 'goal-b',
+  reactionText: null,
+  reactionShownAt: null,
 };
 
 const goals = [

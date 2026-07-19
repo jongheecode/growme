@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import { Category } from './tasks';
+import { Category, Difficulty, DueChoice } from './tasks';
 
 export interface Goal {
   id: string;
@@ -32,4 +32,18 @@ export async function sendGoalChatMessage(messages: ChatMessage[]): Promise<Chat
   });
   if (!res.ok) throw new Error('메시지를 보내지 못했어요');
   return res.json();
+}
+
+export interface TaskSuggestion {
+  title: string;
+  category: Category;
+  difficulty: Difficulty;
+  dueChoice: DueChoice;
+}
+
+export async function suggestTasks(goalId: string): Promise<TaskSuggestion[]> {
+  const res = await apiFetch(`/api/goals/${goalId}/suggest-tasks`, { method: 'POST' });
+  if (!res.ok) throw new Error('추천을 가져오지 못했어요');
+  const body = await res.json();
+  return body.suggestions;
 }

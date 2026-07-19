@@ -16,6 +16,8 @@ export interface Task {
   completedAt: string | null;
   createdAt: string;
   goalId: string | null;
+  reactionText: string | null;
+  reactionShownAt: string | null;
 }
 
 export async function listTasks(): Promise<Task[]> {
@@ -52,4 +54,9 @@ export async function completeTask(id: string): Promise<Task> {
 export async function deleteTask(id: string): Promise<void> {
   const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('할일을 삭제하지 못했어요');
+}
+
+export async function ackReaction(id: string): Promise<void> {
+  const res = await apiFetch(`/api/tasks/${id}/ack-reaction`, { method: 'PATCH' });
+  if (!res.ok) throw new Error('리액션 확인 처리에 실패했어요');
 }
