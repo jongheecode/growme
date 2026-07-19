@@ -17,6 +17,20 @@ async function setupUserAndActivity() {
   return { token, activityId: activityRes.body.id };
 }
 
+async function setupUserAndTask() {
+  const signupRes = await request(app).post('/api/auth/signup').send({
+    email: `st${Date.now()}@example.com`,
+    password: 'password123',
+    nickname: '테스터',
+  });
+  const token = signupRes.body.token;
+  const taskRes = await request(app)
+    .post('/api/tasks')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ title: '집중', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+  return { token, taskId: taskRes.body.id };
+}
+
 describe('Session lifecycle', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -103,5 +117,64 @@ describe('Session lifecycle', () => {
 
     const statuses = [res1.status, res2.status].sort();
     expect(statuses).toEqual([200, 404]);
+  });
+});
+
+describe('Session lifecycle for tasks', () => {
+  it('starts a session for a task', async () => {
+    const { token, taskId } = await setupUserAndTask();
+    const res = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ taskId });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
+  });
+
+  it("returns 404 for another user's task", async () => {
+    const { taskId } = await setupUserAndTask();
+    const signupRes2 = await request(app).post('/api/auth/signup').send({
+      email: `st2${Date.now()}@example.com`,
+      password: 'password123',
+      nickname: '테스터2',
+    });
+    const token2 = signupRes2.body.token;
+    const res = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token2}`)
+      .send({ taskId });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 409 for a non-pending task', async () => {
+    const { token, taskId } = await setupUserAndTask();
+    await prisma.task.update({ where: { id: taskId }, data: { status: 'COMPLETED' } });
+    const res = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ taskId });
+    expect(res.status).toBe(409);
+  });
+
+  it('returns 400 when neither activityId nor taskId is given', async () => {
+    const { token } = await setupUserAndTask();
+    const res = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when both activityId and taskId are given', async () => {
+    const { token, taskId } = await setupUserAndTask();
+    const activityRes = await request(app)
+      .post('/api/activities')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: '집중', category: 'STUDY' });
+    const res = await request(app)
+      .post('/api/sessions/start')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ activityId: activityRes.body.id, taskId });
+    expect(res.status).toBe(400);
   });
 });

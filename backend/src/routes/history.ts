@@ -11,13 +11,13 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
     since.setDate(since.getDate() - (range === 'weekly' ? 7 * 4 : 7));
 
     const sessions = await prisma.session.findMany({
-      where: { userId: req.userId!, endedAt: { gte: since } },
+      where: { userId: req.userId!, endedAt: { gte: since }, activityId: { not: null } },
       include: { activity: { select: { category: true } } },
     });
 
     const buckets: Record<string, number> = {};
     for (const s of sessions) {
-      if (!s.endedAt) continue;
+      if (!s.endedAt || !s.activity) continue;
       const dateKey = s.endedAt.toISOString().slice(0, 10);
       const key = `${dateKey}::${s.activity.category}`;
       buckets[key] = (buckets[key] ?? 0) + s.verifiedSeconds;

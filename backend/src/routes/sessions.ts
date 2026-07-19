@@ -7,11 +7,26 @@ import { isNonEmptyString } from './auth';
 const router = Router();
 
 router.post('/start', requireAuth, async (req: AuthedRequest, res) => {
-  const { activityId } = req.body;
-  if (!isNonEmptyString(activityId)) {
-    return res.status(400).json({ error: 'activityId is required' });
+  const { activityId, taskId } = req.body;
+  const hasActivityId = isNonEmptyString(activityId);
+  const hasTaskId = isNonEmptyString(taskId);
+  if (hasActivityId === hasTaskId) {
+    return res.status(400).json({ error: 'exactly one of activityId or taskId is required' });
   }
   try {
+    if (hasTaskId) {
+      const task = await prisma.task.findFirst({ where: { id: taskId, userId: req.userId! } });
+      if (!task) {
+        return res.status(404).json({ error: 'task not found' });
+      }
+      if (task.status !== 'PENDING') {
+        return res.status(409).json({ error: 'task is not pending' });
+      }
+      const session = await prisma.session.create({
+        data: { taskId, userId: req.userId!, lastHeartbeatAt: new Date() },
+      });
+      return res.status(201).json({ id: session.id, startedAt: session.startedAt });
+    }
     const activity = await prisma.activity.findFirst({
       where: { id: activityId, userId: req.userId!, deletedAt: null },
     });
