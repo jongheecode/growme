@@ -1,17 +1,32 @@
 import { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, Animated, Easing } from 'react-native';
 import { Task, Category, Difficulty, DueChoice } from '../api/tasks';
+import { TaskSuggestion } from '../api/goals';
 
 interface Props {
   tasks: Task[];
   onComplete: (id: string) => void;
   onCreate: (title: string, category: Category, difficulty: Difficulty, dueChoice: DueChoice) => void;
+  suggestions?: TaskSuggestion[];
+  suggestionsLoading?: boolean;
+  onRequestSuggestions?: () => void;
+  onAcceptSuggestion?: (suggestion: TaskSuggestion) => void;
+  onRejectSuggestion?: (index: number) => void;
 }
 
 const CATEGORIES: Category[] = ['EXERCISE', 'STUDY', 'READING', 'ETC'];
 const DIFFICULTIES: Difficulty[] = ['EASY', 'MEDIUM', 'HARD'];
 
-export default function TaskSheet({ tasks, onComplete, onCreate }: Props) {
+export default function TaskSheet({
+  tasks,
+  onComplete,
+  onCreate,
+  suggestions = [],
+  suggestionsLoading = false,
+  onRequestSuggestions = () => {},
+  onAcceptSuggestion = () => {},
+  onRejectSuggestion = () => {},
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Category>('ETC');
@@ -101,6 +116,20 @@ export default function TaskSheet({ tasks, onComplete, onCreate }: Props) {
               <Text>이번 주{dueChoice === 'THIS_WEEK' ? ' ✓' : ''}</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity testID="request-suggestions" onPress={onRequestSuggestions} disabled={suggestionsLoading}>
+            <Text>{suggestionsLoading ? '추천받는 중...' : '추천받기'}</Text>
+          </TouchableOpacity>
+          {suggestions.map((s, i) => (
+            <View key={i} testID={`suggestion-card-${i}`}>
+              <Text>{`${s.title} (${s.difficulty})`}</Text>
+              <TouchableOpacity testID={`suggestion-accept-${i}`} onPress={() => onAcceptSuggestion(s)}>
+                <Text>수락</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID={`suggestion-reject-${i}`} onPress={() => onRejectSuggestion(i)}>
+                <Text>거절</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
           <TouchableOpacity testID="add-task-submit" onPress={handleCreate}>
             <Text>추가</Text>
           </TouchableOpacity>

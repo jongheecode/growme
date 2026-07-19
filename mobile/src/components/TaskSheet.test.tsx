@@ -46,4 +46,65 @@ describe('TaskSheet', () => {
     fireEvent.press(screen.getByTestId('task-sheet-close'));
     expect(screen.getByTestId('task-fab')).toBeTruthy();
   });
+
+  it('requests suggestions when the button is pressed', () => {
+    const onRequestSuggestions = jest.fn();
+    render(
+      <TaskSheet
+        tasks={tasks}
+        onComplete={() => {}}
+        onCreate={() => {}}
+        onRequestSuggestions={onRequestSuggestions}
+      />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('request-suggestions'));
+    expect(onRequestSuggestions).toHaveBeenCalled();
+  });
+
+  it('shows suggestion cards and accepts one', () => {
+    const onAcceptSuggestion = jest.fn();
+    const suggestions = [{ title: '단어 암기', category: 'STUDY' as const, difficulty: 'MEDIUM' as const, dueChoice: 'TODAY' as const }];
+    render(
+      <TaskSheet
+        tasks={tasks}
+        onComplete={() => {}}
+        onCreate={() => {}}
+        suggestions={suggestions}
+        onAcceptSuggestion={onAcceptSuggestion}
+      />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    expect(screen.getByText(/단어 암기/)).toBeTruthy();
+    fireEvent.press(screen.getByTestId('suggestion-accept-0'));
+    expect(onAcceptSuggestion).toHaveBeenCalledWith(suggestions[0]);
+  });
+
+  it('rejects a suggestion without calling onAcceptSuggestion', () => {
+    const onAcceptSuggestion = jest.fn();
+    const onRejectSuggestion = jest.fn();
+    const suggestions = [{ title: '단어 암기', category: 'STUDY' as const, difficulty: 'MEDIUM' as const, dueChoice: 'TODAY' as const }];
+    render(
+      <TaskSheet
+        tasks={tasks}
+        onComplete={() => {}}
+        onCreate={() => {}}
+        suggestions={suggestions}
+        onAcceptSuggestion={onAcceptSuggestion}
+        onRejectSuggestion={onRejectSuggestion}
+      />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('suggestion-reject-0'));
+    expect(onRejectSuggestion).toHaveBeenCalledWith(0);
+    expect(onAcceptSuggestion).not.toHaveBeenCalled();
+  });
+
+  it('shows a loading label instead of the button while suggestions are loading', () => {
+    render(
+      <TaskSheet tasks={tasks} onComplete={() => {}} onCreate={() => {}} suggestionsLoading />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    expect(screen.getByText('추천받는 중...')).toBeTruthy();
+  });
 });
