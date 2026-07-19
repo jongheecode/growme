@@ -3,6 +3,8 @@ import { Category, Difficulty } from '@prisma/client';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { isNonEmptyString } from './auth';
+import { computePersonality } from '../services/growth';
+import { generateReaction } from '../services/reactions';
 
 const router = Router();
 
@@ -106,10 +108,20 @@ router.patch('/:id/complete', requireAuth, async (req: AuthedRequest, res) => {
       await prisma.task.update({ where: { id: task.id }, data: { status: 'FAILED' } });
       return res.status(409).json({ error: 'task expired' });
     }
-    const updated = await prisma.task.update({
+    let updated = await prisma.task.update({
       where: { id: task.id },
       data: { status: 'COMPLETED', completedAt: new Date() },
     });
+    try {
+      const personality = await computePersonality(req.userId!);
+      const reactionText = await generateReaction(updated, personality, 'COMPLETED');
+      updated = await prisma.task.update({
+        where: { id: task.id },
+        data: { reactionText, reactionShownAt: new Date() },
+      });
+    } catch {
+      // 리액션 생성은 best-effort — 실패해도 완료 처리 자체는 이미 끝난 상태.
+    }
     res.json(updated);
   } catch {
     res.status(500).json({ error: 'internal server error' });

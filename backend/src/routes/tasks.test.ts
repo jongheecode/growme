@@ -1,8 +1,23 @@
 import request from 'supertest';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import app from '../app';
 import { computeDueAt } from './tasks';
 import { prisma } from '../db';
+
+const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
+
+vi.mock('@anthropic-ai/sdk', () => {
+  return {
+    default: vi.fn().mockImplementation(() => ({
+      messages: { create: mockCreate },
+    })),
+  };
+});
+
+beforeEach(() => {
+  mockCreate.mockReset();
+  mockCreate.mockResolvedValue({ content: [{ type: 'text', text: '잘했어!' }] });
+});
 
 async function signup(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
@@ -184,6 +199,39 @@ describe('PATCH /api/tasks/:id/complete', () => {
       .patch(`/api/tasks/${createRes.body.id}/complete`)
       .set('Authorization', `Bearer ${tokenB}`);
     expect(res.status).toBe(404);
+  });
+
+  it('generates and stores a reaction on successful completion', async () => {
+    const token = await signup('taskreact1@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '반응 태스크', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.reactionText).toBe('잘했어!');
+
+    const stored = await prisma.task.findUnique({ where: { id: createRes.body.id } });
+    expect(stored?.reactionShownAt).not.toBeNull();
+  });
+
+  it('completes successfully with reactionText null when the Anthropic call fails', async () => {
+    mockCreate.mockRejectedValue(new Error('rate limited'));
+    const token = await signup('taskreact2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '반응 실패 태스크', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('COMPLETED');
+    expect(res.body.reactionText).toBeNull();
   });
 });
 
