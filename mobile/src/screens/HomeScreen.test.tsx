@@ -5,6 +5,8 @@ import HomeScreen from './HomeScreen';
 
 jest.mock('../api/tasks');
 jest.mock('../api/growth');
+import * as goalsApi from '../api/goals';
+jest.mock('../api/goals');
 
 const mockSetActiveGoalId = jest.fn();
 const mockUseGoals = jest.fn();
@@ -63,6 +65,8 @@ beforeEach(() => {
   (tasksApi.completeTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, status: 'COMPLETED' });
   (tasksApi.createTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, id: '3', title: '새 할일' });
   mockUseGoals.mockReturnValue({ goals, activeGoalId: 'goal-a', setActiveGoalId: mockSetActiveGoalId });
+  (goalsApi.suggestTasks as jest.Mock).mockResolvedValue([]);
+  (tasksApi.ackReaction as jest.Mock).mockResolvedValue(undefined);
 });
 
 describe('HomeScreen', () => {
@@ -134,5 +138,63 @@ describe('HomeScreen', () => {
 
     await waitFor(() => expect(tasksApi.listTasks).toHaveBeenCalledTimes(2));
     expect(screen.getByTestId('home-error')).toHaveTextContent('이미 기한이 지났습니다');
+  });
+
+  it('shows an immediate reaction modal after completing a task', async () => {
+    (tasksApi.completeTask as jest.Mock).mockResolvedValue({ ...taskInGoalA, status: 'COMPLETED', reactionText: '잘했어!' });
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-complete-1'));
+    await waitFor(() => expect(screen.getByTestId('reaction-text')).toHaveTextContent('잘했어!'));
+  });
+
+  it('does not show a reaction modal when completeTask returns no reactionText', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-complete-1'));
+    await waitFor(() => expect(tasksApi.completeTask).toHaveBeenCalled());
+    expect(screen.queryByTestId('reaction-modal')).toBeNull();
+  });
+
+  it('shows a queued reaction for a pending FAILED task on load, and acks it on dismiss', async () => {
+    (tasksApi.listTasks as jest.Mock).mockResolvedValue([
+      { ...taskInGoalA, status: 'FAILED', reactionText: '괜찮아, 다음엔 잘할 거야', reactionShownAt: null },
+    ]);
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('reaction-text')).toHaveTextContent('괜찮아, 다음엔 잘할 거야'));
+    expect(screen.getByTestId('reaction-outcome-label')).toHaveTextContent('아쉬워요');
+
+    fireEvent.press(screen.getByTestId('reaction-modal-dismiss'));
+    await waitFor(() => expect(tasksApi.ackReaction).toHaveBeenCalledWith('1'));
+  });
+
+  it('requests suggestions automatically when switching to a goal with no tasks', async () => {
+    mockUseGoals.mockReturnValue({ goals, activeGoalId: 'goal-a', setActiveGoalId: mockSetActiveGoalId });
+    (tasksApi.listTasks as jest.Mock).mockResolvedValue([taskInGoalB]);
+    render(<HomeScreen />);
+    await waitFor(() => expect(goalsApi.suggestTasks).toHaveBeenCalledWith('goal-a'));
+  });
+
+  it('does not request suggestions when the active goal already has tasks', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('task-fab')).toBeTruthy());
+    expect(goalsApi.suggestTasks).not.toHaveBeenCalled();
+  });
+
+  it('accepts a suggestion, creating a task and clearing the card', async () => {
+    (goalsApi.suggestTasks as jest.Mock).mockResolvedValue([
+      { title: '단어 암기', category: 'STUDY', difficulty: 'MEDIUM', dueChoice: 'TODAY' },
+    ]);
+    (tasksApi.listTasks as jest.Mock).mockResolvedValue([taskInGoalB]);
+    render(<HomeScreen />);
+    await waitFor(() => expect(goalsApi.suggestTasks).toHaveBeenCalled());
+    fireEvent.press(screen.getByTestId('task-fab'));
+    await waitFor(() => expect(screen.getByText(/단어 암기/)).toBeTruthy());
+    fireEvent.press(screen.getByTestId('suggestion-accept-0'));
+    await waitFor(() =>
+      expect(tasksApi.createTask).toHaveBeenCalledWith('단어 암기', 'STUDY', 'MEDIUM', 'TODAY', 'goal-a')
+    );
   });
 });
