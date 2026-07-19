@@ -107,4 +107,26 @@ describe('TaskSheet', () => {
     fireEvent.press(screen.getByTestId('task-fab'));
     expect(screen.getByText('추천받는 중...')).toBeTruthy();
   });
+
+  it('opens a task when its row is tapped', () => {
+    const onOpenTask = jest.fn();
+    render(
+      <TaskSheet tasks={tasks} onComplete={() => {}} onCreate={() => {}} onOpenTask={onOpenTask} />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-row-1'));
+    expect(onOpenTask).toHaveBeenCalledWith(tasks[0]);
+  });
+
+  it('completing a task does not also trigger onOpenTask', () => {
+    const onComplete = jest.fn();
+    const onOpenTask = jest.fn();
+    render(
+      <TaskSheet tasks={tasks} onComplete={onComplete} onCreate={() => {}} onOpenTask={onOpenTask} />
+    );
+    fireEvent.press(screen.getByTestId('task-fab'));
+    fireEvent.press(screen.getByTestId('task-complete-1'));
+    expect(onComplete).toHaveBeenCalledWith('1');
+    expect(onOpenTask).not.toHaveBeenCalled();
+  });
 });

@@ -12,6 +12,7 @@ interface Props {
   onRequestSuggestions?: () => void;
   onAcceptSuggestion?: (suggestion: TaskSuggestion) => void;
   onRejectSuggestion?: (index: number) => void;
+  onOpenTask?: (task: Task) => void;
 }
 
 const CATEGORIES: Category[] = ['EXERCISE', 'STUDY', 'READING', 'ETC'];
@@ -26,6 +27,7 @@ export default function TaskSheet({
   onRequestSuggestions = () => {},
   onAcceptSuggestion = () => {},
   onRejectSuggestion = () => {},
+  onOpenTask = () => {},
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState('');
@@ -81,7 +83,7 @@ export default function TaskSheet({
           </TouchableOpacity>
           <ScrollView testID="task-list">
             {tasks.map((t) => (
-              <View key={t.id}>
+              <TouchableOpacity key={t.id} testID={`task-row-${t.id}`} onPress={() => onOpenTask(t)}>
                 <Text>{`${t.title} (+${t.xpValue}XP)`}</Text>
                 {t.status === 'PENDING' ? (
                   <TouchableOpacity testID={`task-complete-${t.id}`} onPress={() => onComplete(t.id)}>
@@ -90,7 +92,7 @@ export default function TaskSheet({
                 ) : (
                   <Text testID={`task-status-${t.id}`}>{t.status === 'COMPLETED' ? '완료됨' : '실패'}</Text>
                 )}
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
           <TextInput testID="new-task-title" placeholder="할일 제목" value={title} onChangeText={setTitle} />
