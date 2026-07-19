@@ -119,3 +119,63 @@ describe('POST /api/goals/chat', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('POST /api/goals/:id/suggest-tasks', () => {
+  it('returns suggestions for a goal owned by the caller', async () => {
+    const token = await signup('suggest1@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const goal = await prisma.goal.create({ data: { userId: decoded.userId, title: '매일 영어 공부', category: 'STUDY' } });
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: 'tool_use',
+          name: 'suggest_tasks',
+          input: { suggestions: [{ title: '리스닝 20분', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' }] },
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .post(`/api/goals/${goal.id}/suggest-tasks`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.suggestions).toEqual([{ title: '리스닝 20분', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' }]);
+  });
+
+  it("returns 404 for another user's goal", async () => {
+    const tokenA = await signup('suggest2@example.com');
+    const tokenB = await signup('suggest3@example.com');
+    const decodedA = JSON.parse(Buffer.from(tokenA.split('.')[1], 'base64').toString());
+    const goal = await prisma.goal.create({ data: { userId: decodedA.userId, title: 'A의 목표', category: 'STUDY' } });
+
+    const res = await request(app)
+      .post(`/api/goals/${goal.id}/suggest-tasks`)
+      .set('Authorization', `Bearer ${tokenB}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for a nonexistent goal', async () => {
+    const token = await signup('suggest4@example.com');
+    const res = await request(app)
+      .post('/api/goals/nonexistent-id/suggest-tasks')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 502 when the Anthropic call fails', async () => {
+    const token = await signup('suggest5@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const goal = await prisma.goal.create({ data: { userId: decoded.userId, title: '목표', category: 'STUDY' } });
+    mockCreate.mockRejectedValue(new Error('rate limited'));
+
+    const res = await request(app)
+      .post(`/api/goals/${goal.id}/suggest-tasks`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(502);
+  });
+
+  it('requires authentication', async () => {
+    const res = await request(app).post('/api/goals/some-id/suggest-tasks');
+    expect(res.status).toBe(401);
+  });
+});

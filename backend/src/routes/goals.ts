@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { runGoalChat, ChatMessage } from '../services/goalChat';
+import { suggestTasks } from '../services/taskSuggestions';
 
 const router = Router();
 
@@ -39,6 +40,19 @@ router.post('/chat', requireAuth, async (req: AuthedRequest, res) => {
     res.json({ reply: result.reply, goalSet: false });
   } catch {
     res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+router.post('/:id/suggest-tasks', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const goal = await prisma.goal.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!goal) {
+      return res.status(404).json({ error: 'goal not found' });
+    }
+    const suggestions = await suggestTasks({ title: goal.title, category: goal.category });
+    res.json({ suggestions });
+  } catch {
+    res.status(502).json({ error: 'failed to generate suggestions' });
   }
 });
 
