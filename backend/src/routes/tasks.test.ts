@@ -394,3 +394,89 @@ describe('POST /api/tasks with goalId', () => {
     expect(res.body.goalId).toBeNull();
   });
 });
+
+describe('PATCH /api/tasks/:id/ack-reaction', () => {
+  it('marks a pending reaction as shown', async () => {
+    const token = await signup('taskack1@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const task = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '실패한 할일',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+        status: 'FAILED',
+        reactionText: '괜찮아, 다음엔 잘할 거야',
+      },
+    });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${task.id}/ack-reaction`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(204);
+
+    const stored = await prisma.task.findUnique({ where: { id: task.id } });
+    expect(stored?.reactionShownAt).not.toBeNull();
+  });
+
+  it('rejects acking a task with no reaction', async () => {
+    const token = await signup('taskack2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '반응 없는 할일', category: 'STUDY', difficulty: 'EASY', dueChoice: 'TODAY' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/ack-reaction`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+  });
+
+  it('rejects acking an already-shown reaction', async () => {
+    const token = await signup('taskack3@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const task = await prisma.task.create({
+      data: {
+        userId: decoded.userId,
+        title: '이미 확인함',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+        status: 'FAILED',
+        reactionText: '괜찮아',
+        reactionShownAt: new Date(),
+      },
+    });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${task.id}/ack-reaction`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(409);
+  });
+
+  it("returns 404 for another user's task", async () => {
+    const tokenA = await signup('taskack4@example.com');
+    const tokenB = await signup('taskack5@example.com');
+    const decodedA = JSON.parse(Buffer.from(tokenA.split('.')[1], 'base64').toString());
+    const task = await prisma.task.create({
+      data: {
+        userId: decodedA.userId,
+        title: 'A의 할일',
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        dueAt: new Date(Date.now() - 60_000),
+        status: 'FAILED',
+        reactionText: '괜찮아',
+      },
+    });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${task.id}/ack-reaction`)
+      .set('Authorization', `Bearer ${tokenB}`);
+    expect(res.status).toBe(404);
+  });
+});

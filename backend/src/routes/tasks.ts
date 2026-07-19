@@ -160,4 +160,20 @@ router.delete('/:id', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.patch('/:id/ack-reaction', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const task = await prisma.task.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+    if (!task) {
+      return res.status(404).json({ error: 'task not found' });
+    }
+    if (!task.reactionText || task.reactionShownAt) {
+      return res.status(409).json({ error: 'no pending reaction' });
+    }
+    await prisma.task.update({ where: { id: task.id }, data: { reactionShownAt: new Date() } });
+    res.status(204).send();
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 export default router;
