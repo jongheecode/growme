@@ -77,19 +77,21 @@ enum Species {
 }
 
 model Task {
-  id          String     @id @default(uuid())
-  userId      String
-  goalId      String?
-  goal        Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  category    Category
-  difficulty  Difficulty
-  xpValue     Int
-  dueAt       DateTime
-  status      TaskStatus @default(PENDING)
-  completedAt DateTime?
-  createdAt   DateTime   @default(now())
+  id              String     @id @default(uuid())
+  userId          String
+  goalId          String?
+  goal            Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  category        Category
+  difficulty      Difficulty
+  xpValue         Int
+  dueAt           DateTime
+  status          TaskStatus @default(PENDING)
+  completedAt     DateTime?
+  reactionText    String?
+  reactionShownAt DateTime?
+  createdAt       DateTime   @default(now())
 }
 
 model GrowthProfile {
