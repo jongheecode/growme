@@ -8,8 +8,3 @@ export function getAnthropicClient(): Anthropic {
   }
   return anthropicClient;
 }
-
-// For testing: reset the singleton
-export function resetAnthropicClient(): void {
-  anthropicClient = null;
-}
