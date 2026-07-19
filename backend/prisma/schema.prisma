@@ -47,8 +47,10 @@ model Activity {
 
 model Session {
   id              String    @id @default(uuid())
-  activityId      String
-  activity        Activity  @relation(fields: [activityId], references: [id])
+  activityId      String?
+  activity        Activity? @relation(fields: [activityId], references: [id])
+  taskId          String?
+  task            Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   startedAt       DateTime  @default(now())
@@ -92,6 +94,7 @@ model Task {
   reactionText    String?
   reactionShownAt DateTime?
   createdAt       DateTime   @default(now())
+  sessions        Session[]
 }
 
 model GrowthProfile {
