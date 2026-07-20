@@ -30,6 +30,11 @@ model User {
   goals        Goal[]
   growthProfile GrowthProfile?
 
+  friendshipsSent      Friendship[]      @relation("FriendRequester")
+  friendshipsReceived  Friendship[]      @relation("FriendAddressee")
+  challengesCreated    Challenge[]
+  challengeMemberships ChallengeMember[]
+
   @@unique([oauthProvider, oauthId])
 }
 
@@ -113,4 +118,45 @@ model Goal {
   category  Category
   createdAt DateTime @default(now())
   tasks     Task[]
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Friendship {
+  id          String       @id @default(uuid())
+  requesterId String
+  addresseeId String
+  status      FriendStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  requester   User         @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User         @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+}
+
+model Challenge {
+  id          String            @id @default(uuid())
+  name        String
+  category    Category?
+  targetXp    Int
+  startDate   DateTime
+  endDate     DateTime
+  inviteCode  String            @unique
+  createdById String
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  members     ChallengeMember[]
+}
+
+model ChallengeMember {
+  id          String    @id @default(uuid())
+  challengeId String
+  userId      String
+  joinedAt    DateTime  @default(now())
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
 }
