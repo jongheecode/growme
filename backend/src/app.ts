@@ -10,6 +10,7 @@ import usersRouter from './routes/users';
 import tasksRouter from './routes/tasks';
 import growthRouter from './routes/growth';
 import goalsRouter from './routes/goals';
+import friendsRouter from './routes/friends';
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/growth', growthRouter);
 app.use('/api/goals', goalsRouter);
+app.use('/api/friends', friendsRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
