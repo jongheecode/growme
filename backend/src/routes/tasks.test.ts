@@ -214,6 +214,45 @@ describe('PATCH /api/tasks/:id/complete', () => {
     expect(res.body.completedAt).not.toBeNull();
   });
 
+  it('awards points equal to the xpValue on completion, even for a brand new user', async () => {
+    const token = await signup('taskcomplete_points@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '포인트 적립', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const profile = await prisma.growthProfile.findUniqueOrThrow({ where: { userId: decoded.userId } });
+    expect(profile.points).toBe(10);
+  });
+
+  it('accumulates points across multiple completions', async () => {
+    const token = await signup('taskcomplete_points2@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const createRes1 = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '포인트1', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+    const createRes2 = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '포인트2', category: 'STUDY', difficulty: 'HARD', dueChoice: 'THIS_WEEK' });
+
+    await request(app)
+      .patch(`/api/tasks/${createRes1.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    await request(app)
+      .patch(`/api/tasks/${createRes2.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const profile = await prisma.growthProfile.findUniqueOrThrow({ where: { userId: decoded.userId } });
+    expect(profile.points).toBe(10 + 35);
+  });
+
   it('rejects completing an already-completed task', async () => {
     const token = await signup('taskcomplete2@example.com');
     const createRes = await request(app)

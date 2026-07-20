@@ -128,6 +128,11 @@ router.patch('/:id/complete', requireAuth, async (req: AuthedRequest, res) => {
       where: { id: task.id },
       data: { status: 'COMPLETED', completedAt: new Date() },
     });
+    await prisma.growthProfile.upsert({
+      where: { userId: req.userId! },
+      create: { userId: req.userId!, points: task.xpValue },
+      update: { points: { increment: task.xpValue } },
+    });
     try {
       const personality = await computePersonality(req.userId!);
       const reactionText = await generateReaction(updated, personality, 'COMPLETED');
