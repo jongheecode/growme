@@ -11,6 +11,7 @@ import tasksRouter from './routes/tasks';
 import growthRouter from './routes/growth';
 import goalsRouter from './routes/goals';
 import friendsRouter from './routes/friends';
+import leaderboardRouter from './routes/leaderboard';
 
 const app = express();
 app.use(cors());
@@ -26,6 +27,7 @@ app.use('/api/tasks', tasksRouter);
 app.use('/api/growth', growthRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/friends', friendsRouter);
+app.use('/api/leaderboard', leaderboardRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
