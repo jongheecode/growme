@@ -20,6 +20,7 @@ export interface GrowthState {
   xpIntoStage: number;
   xpToNextStage: number | null;
   personality: Personality | null;
+  points: number;
 }
 
 export async function getGrowth(): Promise<GrowthState> {

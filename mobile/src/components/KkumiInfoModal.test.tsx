@@ -9,6 +9,7 @@ const eggGrowth: GrowthState = {
   xpIntoStage: 0,
   xpToNextStage: null,
   personality: null,
+  points: 0,
 };
 
 const grownGrowth: GrowthState = {
@@ -18,6 +19,7 @@ const grownGrowth: GrowthState = {
   xpIntoStage: 10,
   xpToNextStage: 100,
   personality: { axisA: 'STEADY', axisB: 'EASYGOING', type: 'STEADY_EASYGOING' },
+  points: 0,
 };
 
 describe('KkumiInfoModal', () => {

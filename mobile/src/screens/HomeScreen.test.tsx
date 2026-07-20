@@ -22,6 +22,7 @@ const growthState: growthApi.GrowthState = {
   xpIntoStage: 10,
   xpToNextStage: 100,
   personality: null,
+  points: 0,
 };
 
 const taskInGoalA: tasksApi.Task = {
