@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Task, Category, Difficulty, DueChoice, listTasks, createTask, completeTask, ackReaction } from '../api/tasks';
 import { GrowthState, getGrowth } from '../api/growth';
+import { EquippedAccessory, getMyAccessories } from '../api/shop';
 import { TaskSuggestion, suggestTasks } from '../api/goals';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
@@ -22,13 +23,19 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = useState<TaskSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [accessories, setAccessories] = useState<EquippedAccessory[]>([]);
 
   const refresh = useCallback(async () => {
     try {
       setError('');
-      const [taskList, growthState] = await Promise.all([listTasks(), getGrowth()]);
+      const [taskList, growthState, accessoryList] = await Promise.all([
+        listTasks(),
+        getGrowth(),
+        getMyAccessories(),
+      ]);
       setTasks(taskList);
       setGrowth(growthState);
+      setAccessories(accessoryList);
       setReactionQueue((current) =>
         current.length > 0 ? current : taskList.filter((t) => t.reactionText && !t.reactionShownAt)
       );
@@ -140,7 +147,7 @@ export default function HomeScreen() {
         {error ? <Text testID="home-error">{error}</Text> : null}
         {growth ? (
           <TouchableOpacity testID="kkumi-tap-target" onPress={() => setModalVisible(true)}>
-            <KkumiView species={growth.species} stage={growth.stage} />
+            <KkumiView species={growth.species} stage={growth.stage} accessories={accessories} />
           </TouchableOpacity>
         ) : error ? (
           <TouchableOpacity testID="home-retry" onPress={() => refresh()}>

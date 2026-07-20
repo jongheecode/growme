@@ -1,10 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import * as tasksApi from '../api/tasks';
 import * as growthApi from '../api/growth';
+import * as shopApi from '../api/shop';
 import HomeScreen from './HomeScreen';
 
 jest.mock('../api/tasks');
 jest.mock('../api/growth');
+jest.mock('../api/shop');
 import * as goalsApi from '../api/goals';
 jest.mock('../api/goals');
 jest.mock('../api/sessions');
@@ -69,6 +71,7 @@ beforeEach(() => {
   mockUseGoals.mockReturnValue({ goals, activeGoalId: 'goal-a', setActiveGoalId: mockSetActiveGoalId });
   (goalsApi.suggestTasks as jest.Mock).mockResolvedValue([]);
   (tasksApi.ackReaction as jest.Mock).mockResolvedValue(undefined);
+  (shopApi.getMyAccessories as jest.Mock).mockResolvedValue([]);
 });
 
 describe('HomeScreen', () => {
@@ -216,6 +219,12 @@ describe('HomeScreen', () => {
     fireEvent.press(screen.getByTestId('mission-close'));
     await waitFor(() => expect(screen.queryByTestId('mission-modal')).toBeNull());
     expect(tasksApi.completeTask).not.toHaveBeenCalled();
+  });
+
+  it('passes equipped accessories to the kkumi view', async () => {
+    (shopApi.getMyAccessories as jest.Mock).mockResolvedValue([{ itemId: 'i1', slot: 'HAT', key: 'ribbon' }]);
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('accessory-badge-HAT')).toBeTruthy());
   });
 
   it('completes a task from the mission modal and shows the reaction', async () => {
