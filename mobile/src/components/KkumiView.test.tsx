@@ -11,4 +11,22 @@ describe('KkumiView', () => {
     render(<KkumiView species="SPECIES_B" stage={2} />);
     expect(screen.getByTestId('kkumi-view')).toBeTruthy();
   });
+
+  it('renders a badge for each equipped accessory when stage > 0', () => {
+    render(
+      <KkumiView
+        species="SPECIES_B"
+        stage={1}
+        accessories={[{ slot: 'HAT' }, { slot: 'FACE' }]}
+      />
+    );
+    expect(screen.getByTestId('accessory-badge-HAT')).toBeTruthy();
+    expect(screen.getByTestId('accessory-badge-FACE')).toBeTruthy();
+    expect(screen.queryByTestId('accessory-badge-BACKGROUND')).toBeNull();
+  });
+
+  it('does not render accessories at stage 0 (egg)', () => {
+    render(<KkumiView species={null} stage={0} accessories={[{ slot: 'HAT' }]} />);
+    expect(screen.queryByTestId('accessory-badge-HAT')).toBeNull();
+  });
 });
