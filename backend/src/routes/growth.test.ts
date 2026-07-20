@@ -53,4 +53,24 @@ describe('GET /api/growth/me', () => {
     const res = await request(app).get('/api/growth/me');
     expect(res.status).toBe(401);
   });
+
+  it('returns points 0 for a brand new user', async () => {
+    const { token } = await signup('growthme_points1@example.com');
+    const res = await request(app).get('/api/growth/me').set('Authorization', `Bearer ${token}`);
+    expect(res.body.points).toBe(0);
+  });
+
+  it('reflects accrued points after a task completion', async () => {
+    const { token } = await signup('growthme_points2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '포인트 확인', category: 'ETC', difficulty: 'MEDIUM', dueChoice: 'TODAY' });
+    await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app).get('/api/growth/me').set('Authorization', `Bearer ${token}`);
+    expect(res.body.points).toBe(20);
+  });
 });
