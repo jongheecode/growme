@@ -34,4 +34,30 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.get('/tasks', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: { userId: req.userId!, status: { not: 'PENDING' } },
+      include: { sessions: true },
+    });
+
+    const entries = tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      category: t.category,
+      difficulty: t.difficulty,
+      status: t.status as 'COMPLETED' | 'FAILED',
+      xpValue: t.xpValue,
+      occurredAt: (t.status === 'COMPLETED' ? t.completedAt! : t.dueAt).toISOString(),
+      focusSeconds: t.sessions.reduce((sum, s) => sum + s.verifiedSeconds, 0),
+    }));
+
+    entries.sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1));
+
+    res.json(entries);
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 export default router;
