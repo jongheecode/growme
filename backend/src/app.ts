@@ -13,6 +13,7 @@ import goalsRouter from './routes/goals';
 import friendsRouter from './routes/friends';
 import leaderboardRouter from './routes/leaderboard';
 import challengesRouter from './routes/challenges';
+import shopRouter from './routes/shop';
 
 const app = express();
 app.use(cors());
@@ -30,6 +31,7 @@ app.use('/api/goals', goalsRouter);
 app.use('/api/friends', friendsRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/challenges', challengesRouter);
+app.use('/api/shop', shopRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
