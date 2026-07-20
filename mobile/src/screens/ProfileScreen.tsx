@@ -19,6 +19,7 @@ export default function ProfileScreen() {
       <Button title="친구" onPress={() => navigation.navigate('Friends')} testID="nav-friends" />
       <Button title="랭킹" onPress={() => navigation.navigate('Leaderboard')} testID="nav-leaderboard" />
       <Button title="챌린지" onPress={() => navigation.navigate('Challenges')} testID="nav-challenges" />
+      <Button title="상점" onPress={() => navigation.navigate('Shop')} testID="nav-shop" />
       <Button title="로그아웃" onPress={() => logout()} testID="logout-button" />
     </View>
   );

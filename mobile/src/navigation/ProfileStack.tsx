@@ -4,6 +4,7 @@ import FriendsScreen from '../screens/FriendsScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import ChallengeDetailScreen from '../screens/ChallengeDetailScreen';
+import ShopScreen from '../screens/ShopScreen';
 
 export type ProfileStackParamList = {
   ProfileHome: undefined;
@@ -11,6 +12,7 @@ export type ProfileStackParamList = {
   Leaderboard: undefined;
   Challenges: undefined;
   ChallengeDetail: { challengeId: string };
+  Shop: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -27,6 +29,7 @@ export default function ProfileStack() {
         component={ChallengeDetailScreen}
         options={{ title: '챌린지 상세' }}
       />
+      <Stack.Screen name="Shop" component={ShopScreen} options={{ title: '상점' }} />
     </Stack.Navigator>
   );
 }
