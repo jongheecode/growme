@@ -34,6 +34,7 @@ model User {
   friendshipsReceived  Friendship[]      @relation("FriendAddressee")
   challengesCreated    Challenge[]
   challengeMemberships ChallengeMember[]
+  userAccessories      UserAccessory[]
 
   @@unique([oauthProvider, oauthId])
 }
@@ -107,6 +108,7 @@ model GrowthProfile {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   species   Species?
+  points    Int      @default(0)
   createdAt DateTime @default(now())
 }
 
@@ -159,4 +161,31 @@ model ChallengeMember {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([challengeId, userId])
+}
+
+enum AccessorySlot {
+  HAT
+  FACE
+  BACKGROUND
+}
+
+model AccessoryItem {
+  id              String          @id @default(uuid())
+  key             String          @unique
+  name            String
+  slot            AccessorySlot
+  price           Int
+  userAccessories UserAccessory[]
+}
+
+model UserAccessory {
+  id          String        @id @default(uuid())
+  userId      String
+  itemId      String
+  purchasedAt DateTime      @default(now())
+  equipped    Boolean       @default(false)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item        AccessoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
 }
