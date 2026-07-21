@@ -23,7 +23,16 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 280,
+          "resizeMode": "contain",
+          "backgroundColor": "#FBF6EE"
+        }
+      ]
     ],
     "extra": {
       "apiBase": "http://192.168.1.100:4000"
