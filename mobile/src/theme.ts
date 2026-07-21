@@ -29,3 +29,16 @@ export const speciesPalette = {
 } as const;
 
 export type DesignSpecies = keyof typeof speciesPalette;
+
+export const categoryMeta = {
+  EXERCISE: { label: '운동', color: '#EE9E86' },
+  STUDY: { label: '공부', color: '#6FA8D8' },
+  READING: { label: '독서', color: '#B7A6E4' },
+  ETC: { label: '기타', color: '#F3C969' },
+} as const;
+
+export const difficultyLabel = {
+  EASY: '쉬움',
+  MEDIUM: '보통',
+  HARD: '어려움',
+} as const;
