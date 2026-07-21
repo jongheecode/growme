@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { sendGoalChatMessage, ChatMessage } from '../api/goals';
 import { useGoals } from '../context/GoalsContext';
@@ -93,6 +93,11 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
         ) : null}
       </View>
 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
       <ScrollView testID="chat-message-list" style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 10 }}>
         {messages.map((m, i) => {
           const isUser = m.role === 'user';
@@ -162,6 +167,7 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
           <Text style={{ color: '#fff', fontSize: 18 }}>↑</Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
