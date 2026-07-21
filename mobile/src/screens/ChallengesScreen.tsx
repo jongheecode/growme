@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MyChallenge, createChallenge, joinChallenge, listMyChallenges } from '../api/challenges';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
+import { colors, fonts } from '../theme';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'Challenges'>;
+
+const inputStyle = {
+  padding: 13,
+  borderWidth: 1.5,
+  borderColor: colors.border,
+  borderRadius: 14,
+  backgroundColor: colors.card,
+  fontFamily: fonts.body,
+  fontSize: 14,
+  color: colors.ink,
+};
 
 export default function ChallengesScreen() {
   const navigation = useNavigation<Nav>();
@@ -56,40 +68,67 @@ export default function ChallengesScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, padding: 16 }}>
-      {error ? <Text testID="challenges-error">{error}</Text> : null}
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18 }}>
+      <Text style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.ink, marginBottom: 14 }}>챌린지</Text>
 
-      {challenges.map((c) => (
-        <TouchableOpacity
-          key={c.id}
-          testID={`challenge-row-${c.id}`}
-          onPress={() => navigation.navigate('ChallengeDetail', { challengeId: c.id })}
-        >
-          <Text>{`${c.name} — ${Math.round(c.percent)}% (${c.achievedXp}/${c.targetXp}XP)`}</Text>
+      {error ? (
+        <Text testID="challenges-error" style={{ fontFamily: fonts.body, color: colors.fail, marginBottom: 10 }}>
+          {error}
+        </Text>
+      ) : null}
+
+      <View style={{ gap: 10, marginBottom: 20 }}>
+        {challenges.map((c) => {
+          const pct = Math.min(100, Math.round(c.percent));
+          return (
+            <TouchableOpacity
+              key={c.id}
+              testID={`challenge-row-${c.id}`}
+              onPress={() => navigation.navigate('ChallengeDetail', { challengeId: c.id })}
+              style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 15 }}
+            >
+              <Text style={{ fontFamily: fonts.heading, fontSize: 16, color: colors.ink, marginBottom: 8 }}>
+                {`${c.name} — ${pct}% (${c.achievedXp}/${c.targetXp}XP)`}
+              </Text>
+              <View style={{ height: 10, backgroundColor: colors.border, borderRadius: 6, overflow: 'hidden' }}>
+                <View style={{ width: `${pct}%`, height: '100%', backgroundColor: colors.green }} />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={{ fontFamily: fonts.heading, fontSize: 15, color: colors.ink, marginBottom: 8 }}>새 챌린지 만들기</Text>
+      <View style={{ gap: 10, marginBottom: 20 }}>
+        <TextInput testID="challenge-name-input" placeholder="챌린지 이름" placeholderTextColor={colors.inkFaint} value={name} onChangeText={setName} style={inputStyle} />
+        <TextInput
+          testID="challenge-target-xp-input"
+          placeholder="목표 XP"
+          placeholderTextColor={colors.inkFaint}
+          value={targetXp}
+          onChangeText={setTargetXp}
+          keyboardType="numeric"
+          style={inputStyle}
+        />
+        <TouchableOpacity testID="create-challenge-submit" onPress={handleCreate} style={{ backgroundColor: colors.green, borderRadius: 16, paddingVertical: 15, alignItems: 'center' }}>
+          <Text style={{ fontFamily: fonts.heading, color: '#fff', fontSize: 15 }}>챌린지 만들기</Text>
         </TouchableOpacity>
-      ))}
+      </View>
 
-      <TextInput testID="challenge-name-input" placeholder="챌린지 이름" value={name} onChangeText={setName} />
-      <TextInput
-        testID="challenge-target-xp-input"
-        placeholder="목표 XP"
-        value={targetXp}
-        onChangeText={setTargetXp}
-        keyboardType="numeric"
-      />
-      <TouchableOpacity testID="create-challenge-submit" onPress={handleCreate}>
-        <Text>챌린지 만들기</Text>
-      </TouchableOpacity>
-
-      <TextInput
-        testID="invite-code-input"
-        placeholder="초대코드로 참여"
-        value={inviteCode}
-        onChangeText={setInviteCode}
-      />
-      <TouchableOpacity testID="join-challenge-submit" onPress={handleJoin}>
-        <Text>참여하기</Text>
-      </TouchableOpacity>
+      <Text style={{ fontFamily: fonts.heading, fontSize: 15, color: colors.ink, marginBottom: 8 }}>초대코드로 참여</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TextInput
+          testID="invite-code-input"
+          placeholder="초대코드 입력"
+          placeholderTextColor={colors.inkFaint}
+          value={inviteCode}
+          onChangeText={setInviteCode}
+          style={[inputStyle, { flex: 1 }]}
+        />
+        <TouchableOpacity testID="join-challenge-submit" onPress={handleJoin} style={{ paddingHorizontal: 18, borderRadius: 14, backgroundColor: colors.lavender, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontFamily: fonts.heading, color: '#fff', fontSize: 14 }}>참여</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
