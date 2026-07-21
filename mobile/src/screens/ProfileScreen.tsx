@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +14,6 @@ const MENU: { testID: string; label: string; icon: IconName; color: string; navi
   { testID: 'nav-friends', label: '친구', icon: 'friends', color: '#EE9E86', navigate: 'Friends' },
   { testID: 'nav-leaderboard', label: '랭킹', icon: 'ranking', color: '#B58A2E', navigate: 'Leaderboard' },
   { testID: 'nav-challenges', label: '챌린지', icon: 'challenge', color: '#9179CC', navigate: 'Challenges' },
-  { testID: 'nav-shop', label: '상점', icon: 'shop', color: '#5FA97D', navigate: 'Shop' },
 ];
 
 export default function ProfileScreen() {
@@ -22,7 +22,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, padding: 18, paddingTop: 24 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, padding: 18 }} edges={['top']}>
       <Text style={{ fontFamily: fonts.heading, fontSize: 26, color: colors.ink, marginBottom: 16 }}>프로필</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {MENU.map((m) => (
@@ -80,6 +80,6 @@ export default function ProfileScreen() {
           <Text style={{ fontFamily: fonts.heading, color: colors.inkFaint, fontSize: 15 }}>로그아웃</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

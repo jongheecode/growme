@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShopItem, equipItem, getShopItems, purchaseItem } from '../api/shop';
 import { getGrowth } from '../api/growth';
 import KkumiView from '../components/KkumiView';
@@ -50,19 +51,20 @@ export default function ShopScreen() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+      <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }} edges={['top']}>
         <Text testID="shop-error" style={{ fontFamily: fonts.body, color: colors.fail, marginBottom: 10 }}>
           {error}
         </Text>
         <TouchableOpacity testID="shop-retry" onPress={load}>
           <Text style={{ fontFamily: fonts.heading, color: colors.green }}>다시 시도</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 18 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Text style={{ fontFamily: fonts.heading, fontSize: 26, color: colors.ink }}>상점</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.goldTint, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 }}>
@@ -118,6 +120,7 @@ export default function ShopScreen() {
           </View>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

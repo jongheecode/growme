@@ -34,7 +34,6 @@ function renderProfile() {
           <Stack.Screen name="Friends" component={DummyScreen} />
           <Stack.Screen name="Leaderboard" component={DummyScreen} />
           <Stack.Screen name="Challenges" component={DummyScreen} />
-          <Stack.Screen name="Shop" component={DummyScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
@@ -76,12 +75,5 @@ describe('ProfileScreen', () => {
     await waitFor(() => expect(screen.getByTestId('nav-challenges')).toBeTruthy());
     fireEvent.press(screen.getByTestId('nav-challenges'));
     await waitFor(() => expect(screen.getByTestId('dummy-screen-name')).toHaveTextContent('Challenges'));
-  });
-
-  it('navigates to the shop screen', async () => {
-    renderProfile();
-    await waitFor(() => expect(screen.getByTestId('nav-shop')).toBeTruthy());
-    fireEvent.press(screen.getByTestId('nav-shop'));
-    await waitFor(() => expect(screen.getByTestId('dummy-screen-name')).toHaveTextContent('Shop'));
   });
 });

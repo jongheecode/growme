@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { HistoryEntry, getTaskHistory } from '../api/history';
 import KkumiView from '../components/KkumiView';
 import Icon from '../components/Icon';
@@ -36,28 +37,28 @@ export default function HistoryScreen() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+      <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }} edges={['top']}>
         <Text testID="history-error" style={{ fontFamily: fonts.body, color: colors.fail, marginBottom: 10 }}>
           {error}
         </Text>
         <TouchableOpacity testID="history-retry" onPress={load}>
           <Text style={{ fontFamily: fonts.heading, color: colors.green }}>다시 시도</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!entries) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+      <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }} edges={['top']}>
         <Text style={{ fontFamily: fonts.body, color: colors.inkMuted }}>불러오는 중...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (entries.length === 0) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }}>
+      <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }} edges={['top']}>
         <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
           <KkumiView species="SPECIES_B" stage={0} size={76} />
           <View
@@ -82,12 +83,12 @@ export default function HistoryScreen() {
         <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkMuted, textAlign: 'center' }}>
           미션을 완료하면 여기에 차곡차곡 쌓여요
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <View style={{ padding: 18, paddingBottom: 6 }}>
         <Text style={{ fontFamily: fonts.heading, fontSize: 26, color: colors.ink }}>기록</Text>
         <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.inkMuted }}>완료하고 실패한 미션들</Text>
@@ -134,6 +135,6 @@ export default function HistoryScreen() {
           );
         })}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

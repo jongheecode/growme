@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Jua_400Regular } from '@expo-google-fonts/jua';
 import { GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,10 +25,12 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <GoalsProvider>
-        <RootNavigator />
-      </GoalsProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <GoalsProvider>
+          <RootNavigator />
+        </GoalsProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

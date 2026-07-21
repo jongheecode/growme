@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Task, Category, Difficulty, DueChoice, listTasks, createTask, completeTask, ackReaction } from '../api/tasks';
 import { GrowthState, Species, getGrowth } from '../api/growth';
 import { EquippedAccessory, getMyAccessories } from '../api/shop';
@@ -159,7 +160,7 @@ export default function HomeScreen() {
     immediateReaction ?? (queuedReaction ? { text: queuedReaction.reactionText!, outcome: 'FAILED' } : null);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView horizontal testID="goal-chip-list" style={{ maxHeight: 48, flexGrow: 0 }}>
         {goals.map((g) => (
           <TouchableOpacity
@@ -243,6 +244,6 @@ export default function HomeScreen() {
         onRejectSuggestion={handleRejectSuggestion}
         onOpenTask={(t) => setSelectedTask(t)}
       />
-    </View>
+    </SafeAreaView>
   );
 }

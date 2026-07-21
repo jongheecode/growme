@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import ShopScreen from '../screens/ShopScreen';
 import ProfileStack from './ProfileStack';
 import Icon, { IconName } from '../components/Icon';
 import { colors, fonts } from '../theme';
@@ -8,12 +9,14 @@ import { colors, fonts } from '../theme';
 export type MainTabsParamList = {
   Home: undefined;
   History: undefined;
+  Shop: undefined;
   Profile: undefined;
 };
 
 const TAB_ICONS: Record<keyof MainTabsParamList, IconName> = {
   Home: 'home',
   History: 'history',
+  Shop: 'shop',
   Profile: 'profile',
 };
 
@@ -29,6 +32,7 @@ export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.inkFaint,
         tabBarLabelStyle: { fontFamily: fonts.heading, fontSize: 11 },
@@ -41,10 +45,11 @@ export default function MainTabs() {
         component={HistoryScreen}
         options={{ title: '히스토리', tabBarIcon: tabIcon('History') }}
       />
+      <Tab.Screen name="Shop" component={ShopScreen} options={{ title: '상점', tabBarIcon: tabIcon('Shop') }} />
       <Tab.Screen
         name="Profile"
         component={ProfileStack}
-        options={{ title: '프로필', headerShown: false, tabBarIcon: tabIcon('Profile') }}
+        options={{ title: '프로필', tabBarIcon: tabIcon('Profile') }}
       />
     </Tab.Navigator>
   );

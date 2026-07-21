@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { sendGoalChatMessage, ChatMessage } from '../api/goals';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
@@ -49,7 +50,9 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
 
   if (goalConfirmed) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }}>
+      <SafeAreaView
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }}
+      >
         <KkumiView species="SPECIES_A" stage={2} />
         <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkMuted, marginTop: 14 }}>목표가 생겼어요:</Text>
         <Text testID="goal-confirmed" style={{ fontFamily: fonts.heading, fontSize: 24, color: colors.ink, marginTop: 6, marginBottom: 24 }}>
@@ -65,12 +68,12 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
         >
           <Text style={{ fontFamily: fonts.heading, color: '#fff', fontSize: 16 }}>계속하기</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'bottom']}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           <KkumiView species="SPECIES_A" stage={2} size={32} />
@@ -159,6 +162,6 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
           <Text style={{ color: '#fff', fontSize: 18 }}>↑</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
