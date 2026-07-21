@@ -24,7 +24,7 @@ beforeEach(() => {
 describe('RootNavigator', () => {
   it('shows the auth stack when there is no stored token', async () => {
     renderRoot();
-    await waitFor(() => expect(screen.getByText('그로우미')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('login-email')).toBeTruthy());
   });
 
   it('shows the onboarding chat without a cancel button when logged in with no goals', async () => {
