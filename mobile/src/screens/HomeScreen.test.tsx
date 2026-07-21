@@ -221,6 +221,11 @@ describe('HomeScreen', () => {
     expect(tasksApi.completeTask).not.toHaveBeenCalled();
   });
 
+  it('shows the current point balance', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('points-badge')).toHaveTextContent('0 P'));
+  });
+
   it('passes equipped accessories to the kkumi view', async () => {
     (shopApi.getMyAccessories as jest.Mock).mockResolvedValue([{ itemId: 'i1', slot: 'HAT', key: 'ribbon' }]);
     render(<HomeScreen />);
