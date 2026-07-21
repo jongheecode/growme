@@ -20,6 +20,8 @@ interface Props {
   species: Species | null;
   stage: number;
   accessories?: AccessoryProp[];
+  /** Rendered pixel size. Defaults to the stage-based growth size (80 + stage*20) — pass this to fit a fixed-size avatar/thumbnail slot without the character overflowing it. */
+  size?: number;
 }
 
 function SpeciesAccent({ species, dark }: { species: DesignSpecies; dark: string }) {
@@ -70,7 +72,7 @@ function Glasses({ eyeY }: { eyeY: number }) {
   );
 }
 
-export default function KkumiView({ species, stage, accessories }: Props) {
+export default function KkumiView({ species, stage, accessories, size: displaySize }: Props) {
   const size = 80 + stage * 20;
   const designSpecies = species ? SPECIES_MAP[species] : null;
   const P = designSpecies ? speciesPalette[designSpecies] : EGG_PALETTE;
@@ -166,7 +168,7 @@ export default function KkumiView({ species, stage, accessories }: Props) {
   }
 
   return (
-    <Svg testID="kkumi-view" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <Svg testID="kkumi-view" width={displaySize ?? size} height={displaySize ?? size} viewBox={`0 0 ${size} ${size}`}>
       {creature}
     </Svg>
   );

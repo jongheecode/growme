@@ -45,8 +45,8 @@ export default function KkumiInfoModal({ visible, onClose, growth }: Props) {
       <View testID="kkumi-info-modal" style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(42,38,34,.4)' }}>
         <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, paddingBottom: 36 }}>
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 18 }}>
-            <View style={{ width: 88, height: 88, backgroundColor: colors.card, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-              <KkumiView species={growth.species} stage={growth.stage} />
+            <View style={{ width: 88, height: 88, backgroundColor: colors.card, borderRadius: 22, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <KkumiView species={growth.species} stage={growth.stage} size={70} />
             </View>
             <View style={{ flex: 1 }}>
               <Text testID="kkumi-species-label" style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.ink }}>

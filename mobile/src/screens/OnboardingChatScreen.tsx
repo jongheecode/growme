@@ -72,8 +72,8 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}>
-          <KkumiView species="SPECIES_A" stage={2} />
+        <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <KkumiView species="SPECIES_A" stage={2} size={32} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: fonts.heading, fontSize: 16, color: colors.ink }}>꾸미</Text>

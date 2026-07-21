@@ -59,7 +59,7 @@ export default function HistoryScreen() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }}>
         <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-          <KkumiView species="SPECIES_B" stage={0} />
+          <KkumiView species="SPECIES_B" stage={0} size={76} />
           <View
             style={{
               position: 'absolute',

@@ -92,6 +92,7 @@ export default function ShopScreen() {
                 <KkumiView
                   species="SPECIES_A"
                   stage={3}
+                  size={76}
                   accessories={[{ slot: item.slot, key: item.key }]}
                 />
               ) : null}

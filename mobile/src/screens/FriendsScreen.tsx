@@ -132,7 +132,7 @@ export default function FriendsScreen() {
       {friends.length === 0 ? (
         <View style={{ alignItems: 'center', padding: 30, backgroundColor: colors.card, borderRadius: 20 }}>
           <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-            <KkumiView species="SPECIES_C" stage={0} />
+            <KkumiView species="SPECIES_C" stage={0} size={70} />
             <View
               style={{
                 position: 'absolute',
@@ -163,8 +163,8 @@ export default function FriendsScreen() {
               key={f.id}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 12 }}
             >
-              <View style={{ width: 56, height: 56, backgroundColor: colors.background, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                <KkumiView species={f.species} stage={f.stage} />
+              <View style={{ width: 56, height: 56, backgroundColor: colors.background, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <KkumiView species={f.species} stage={f.stage} size={44} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: fonts.heading, fontSize: 16, color: colors.ink }}>{f.nickname}</Text>

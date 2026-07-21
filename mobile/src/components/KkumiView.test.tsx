@@ -29,4 +29,18 @@ describe('KkumiView', () => {
     render(<KkumiView species={null} stage={0} accessories={[{ slot: 'HAT' }]} />);
     expect(screen.queryByTestId('accessory-badge-HAT')).toBeNull();
   });
+
+  it('renders at the stage-based size by default', () => {
+    render(<KkumiView species="SPECIES_B" stage={3} />);
+    const svg = screen.getByTestId('kkumi-view');
+    expect(svg.props.width).toBe(80 + 3 * 20);
+    expect(svg.props.height).toBe(80 + 3 * 20);
+  });
+
+  it('renders at an explicit size when given one', () => {
+    render(<KkumiView species="SPECIES_B" stage={3} size={40} />);
+    const svg = screen.getByTestId('kkumi-view');
+    expect(svg.props.width).toBe(40);
+    expect(svg.props.height).toBe(40);
+  });
 });
