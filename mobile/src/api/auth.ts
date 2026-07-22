@@ -43,3 +43,11 @@ export async function resetPassword(token: string, newPassword: string): Promise
   });
   if (!res.ok) throw new Error('비밀번호를 재설정하지 못했어요');
 }
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const res = await apiFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!res.ok) throw new Error('비밀번호를 변경하지 못했어요');
+}

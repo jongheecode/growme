@@ -1,7 +1,10 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { isNonEmptyString } from './auth';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const router = Router();
 
@@ -16,8 +19,8 @@ router.get('/me', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 router.patch('/me', requireAuth, async (req: AuthedRequest, res) => {
-  const { nickname, bio } = req.body;
-  const data: { nickname?: string; bio?: string } = {};
+  const { nickname, bio, email } = req.body;
+  const data: { nickname?: string; bio?: string; email?: string } = {};
   if (nickname !== undefined) {
     if (!isNonEmptyString(nickname)) {
       return res.status(400).json({ error: 'nickname must be a non-empty string' });
@@ -30,10 +33,19 @@ router.patch('/me', requireAuth, async (req: AuthedRequest, res) => {
     }
     data.bio = bio;
   }
+  if (email !== undefined) {
+    if (!isNonEmptyString(email) || !EMAIL_PATTERN.test(email)) {
+      return res.status(400).json({ error: 'email must be a valid email address' });
+    }
+    data.email = email;
+  }
   try {
     const user = await prisma.user.update({ where: { id: req.userId! }, data });
     res.json({ id: user.id, email: user.email, nickname: user.nickname, bio: user.bio, createdAt: user.createdAt });
-  } catch {
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return res.status(409).json({ error: 'email already in use' });
+    }
     res.status(500).json({ error: 'internal server error' });
   }
 });

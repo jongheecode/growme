@@ -47,6 +47,35 @@ describe('PATCH /api/users/me', () => {
       .send({ bio: 'a'.repeat(61) });
     expect(res.status).toBe(400);
   });
+
+  it('updates email', async () => {
+    const token = await signupAndToken('old-email@example.com', '이메일변경');
+    const res = await request(app)
+      .patch('/api/users/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'new-email@example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe('new-email@example.com');
+  });
+
+  it('rejects an invalid email format', async () => {
+    const token = await signupAndToken('valid-format@example.com', '이메일형식');
+    const res = await request(app)
+      .patch('/api/users/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'not-an-email' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects changing to an email already in use', async () => {
+    await signupAndToken('taken@example.com', '먼저가입');
+    const token = await signupAndToken('changer@example.com', '바꾸는사람');
+    const res = await request(app)
+      .patch('/api/users/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'taken@example.com' });
+    expect(res.status).toBe(409);
+  });
 });
 
 describe('DELETE /api/users/me', () => {

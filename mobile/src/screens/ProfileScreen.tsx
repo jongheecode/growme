@@ -137,6 +137,24 @@ export default function ProfileScreen() {
           {reminderError}
         </Text>
       ) : null}
+      <TouchableOpacity
+        testID="nav-account-settings"
+        onPress={() => navigation.navigate('AccountSettings')}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 18,
+          padding: 14,
+          marginTop: 10,
+        }}
+      >
+        <Text style={{ fontFamily: fonts.heading, fontSize: 14, color: colors.ink }}>계정 설정</Text>
+        <Text style={{ color: colors.inkMuted, fontSize: 16 }}>›</Text>
+      </TouchableOpacity>
       <View style={{ marginTop: 18, gap: 10 }}>
         <TouchableOpacity
           testID="add-goal-button"

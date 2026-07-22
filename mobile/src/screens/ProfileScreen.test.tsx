@@ -46,6 +46,7 @@ function renderProfile() {
           <Stack.Screen name="Friends" component={DummyScreen} />
           <Stack.Screen name="Leaderboard" component={DummyScreen} />
           <Stack.Screen name="Challenges" component={DummyScreen} />
+          <Stack.Screen name="AccountSettings" component={DummyScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
@@ -109,5 +110,12 @@ describe('ProfileScreen', () => {
     await waitFor(() => expect(screen.getByTestId('nav-challenges')).toBeTruthy());
     fireEvent.press(screen.getByTestId('nav-challenges'));
     await waitFor(() => expect(screen.getByTestId('dummy-screen-name')).toHaveTextContent('Challenges'));
+  });
+
+  it('navigates to the account settings screen', async () => {
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('nav-account-settings')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('nav-account-settings'));
+    await waitFor(() => expect(screen.getByTestId('dummy-screen-name')).toHaveTextContent('AccountSettings'));
   });
 });
