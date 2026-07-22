@@ -19,6 +19,9 @@ import safetyRouter from './routes/safety';
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean);
 
 const app = express();
+// Railway(및 대부분의 PaaS)는 앱 앞에 리버스 프록시 1홉을 두므로,
+// rate limiter가 X-Forwarded-For의 실제 클라이언트 IP를 보게 하려면 필요.
+app.set('trust proxy', 1);
 app.use(
   cors(
     allowedOrigins

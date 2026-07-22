@@ -3,8 +3,10 @@ import { OAuth2Client } from 'google-auth-library';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { issueToken, isNonEmptyString } from './auth';
+import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+router.use(authRateLimiter);
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post('/google', async (req, res) => {

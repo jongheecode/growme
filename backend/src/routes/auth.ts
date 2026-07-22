@@ -5,9 +5,11 @@ import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
+import { authRateLimiter } from '../middleware/rateLimit';
 import { sendPasswordResetEmail } from '../services/mailer';
 
 const router = Router();
+router.use(authRateLimiter);
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 function hashResetToken(token: string): string {

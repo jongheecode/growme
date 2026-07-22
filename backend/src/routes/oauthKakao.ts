@@ -3,8 +3,10 @@ import axios from 'axios';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { issueToken, isNonEmptyString } from './auth';
+import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+router.use(authRateLimiter);
 
 router.post('/kakao', async (req, res) => {
   const { accessToken } = req.body;

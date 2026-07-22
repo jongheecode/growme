@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "GrowMe",
     "slug": "mobile",
     "version": "1.0.0",
     "scheme": "growme",
@@ -8,9 +8,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.growme.app",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.growme.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
