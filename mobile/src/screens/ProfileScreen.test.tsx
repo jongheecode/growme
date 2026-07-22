@@ -9,7 +9,13 @@ import ProfileScreen from './ProfileScreen';
 const mockStartAddGoal = jest.fn();
 
 jest.mock('../context/GoalsContext', () => ({
-  useGoals: () => ({ startAddGoal: mockStartAddGoal }),
+  useGoals: () => ({ startAddGoal: mockStartAddGoal, goals: [{ id: 'g1' }, { id: 'g2' }] }),
+}));
+
+jest.mock('../api/users', () => ({
+  getMe: jest.fn(() =>
+    Promise.resolve({ id: 'u1', email: 'a@b.com', nickname: '종이', bio: null, createdAt: '2026-03-01T00:00:00.000Z' })
+  ),
 }));
 
 beforeEach(() => {
@@ -47,6 +53,12 @@ describe('ProfileScreen', () => {
     await waitFor(() => expect(screen.getByTestId('logout-button')).toBeTruthy());
     fireEvent.press(screen.getByTestId('logout-button'));
     await waitFor(() => expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('growme_token'));
+  });
+
+  it('shows the nickname and goal count in the stats card', async () => {
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('profile-nickname')).toHaveTextContent('종이'));
+    expect(screen.getByTestId('profile-goal-count')).toHaveTextContent('2');
   });
 
   it('starts adding a goal when the button is pressed', async () => {
