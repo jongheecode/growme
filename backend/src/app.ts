@@ -15,8 +15,21 @@ import leaderboardRouter from './routes/leaderboard';
 import challengesRouter from './routes/challenges';
 import shopRouter from './routes/shop';
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean);
+
 const app = express();
-app.use(cors());
+app.use(
+  cors(
+    allowedOrigins
+      ? {
+          origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+            callback(new Error('not allowed by CORS'));
+          },
+        }
+      : undefined
+  )
+);
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/auth', oauthGoogleRouter);
