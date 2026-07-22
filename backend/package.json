@@ -4,8 +4,9 @@
   "type": "commonjs",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "prisma generate && tsc",
+    "start": "prisma db push --skip-generate && node dist/server.js",
+    "postinstall": "prisma generate",
     "test": "cross-env NODE_ENV=test vitest run",
     "test:setup": "cross-env DATABASE_URL=$TEST_DATABASE_URL prisma db push --skip-generate",
     "prisma:migrate": "prisma migrate dev"
