@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { login as loginApi, loginWithGoogle, loginWithKakao } from '../api/auth';
@@ -10,6 +11,12 @@ import KkumiView from '../components/KkumiView';
 import { colors, fonts } from '../theme';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+
+// client ID가 아직 설정 안 된 provider는 눌러도 절대 동작할 수 없으므로
+// 버튼 자체를 숨긴다 — "눌리는데 안 되는 버튼"이 없는 것보다 나쁘다.
+const extra = (Constants.expoConfig?.extra ?? {}) as { googleClientId?: string; kakaoClientId?: string };
+const GOOGLE_ENABLED = !!extra.googleClientId;
+const KAKAO_ENABLED = !!extra.kakaoClientId;
 
 const fieldStyle = {
   width: '100%' as const,
@@ -121,28 +128,36 @@ export default function LoginScreen() {
           <Text style={{ fontFamily: fonts.body, color: colors.inkMuted, fontSize: 13 }}>비밀번호를 잊으셨나요?</Text>
         </TouchableOpacity>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24, marginBottom: 16 }}>
-          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-          <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginHorizontal: 10 }}>또는</Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-        </View>
+        {GOOGLE_ENABLED || KAKAO_ENABLED ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24, marginBottom: 16 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginHorizontal: 10 }}>또는</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+            </View>
 
-        <View style={{ gap: 10 }}>
-          <TouchableOpacity
-            testID="login-google"
-            onPress={handleGoogleLogin}
-            style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card }}
-          >
-            <Text style={{ fontFamily: fonts.heading, color: colors.ink, fontSize: 14 }}>구글로 계속하기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="login-kakao"
-            onPress={handleKakaoLogin}
-            style={{ borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: '#FEE500' }}
-          >
-            <Text style={{ fontFamily: fonts.heading, color: '#3C1E1E', fontSize: 14 }}>카카오로 계속하기</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={{ gap: 10 }}>
+              {GOOGLE_ENABLED ? (
+                <TouchableOpacity
+                  testID="login-google"
+                  onPress={handleGoogleLogin}
+                  style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card }}
+                >
+                  <Text style={{ fontFamily: fonts.heading, color: colors.ink, fontSize: 14 }}>구글로 계속하기</Text>
+                </TouchableOpacity>
+              ) : null}
+              {KAKAO_ENABLED ? (
+                <TouchableOpacity
+                  testID="login-kakao"
+                  onPress={handleKakaoLogin}
+                  style={{ borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: '#FEE500' }}
+                >
+                  <Text style={{ fontFamily: fonts.heading, color: '#3C1E1E', fontSize: 14 }}>카카오로 계속하기</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </>
+        ) : null}
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
           <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkMuted }}>아직 계정이 없나요? </Text>

@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendGoalChatMessage, ChatMessage } from '../api/goals';
+import { sendGoalChatMessage, createGoal, ChatMessage } from '../api/goals';
+import { Category } from '../api/tasks';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
-import { colors, fonts } from '../theme';
+import { colors, fonts, categoryMeta } from '../theme';
 
 interface Props {
   canCancel: boolean;
   onDone: () => void;
 }
+
+const CATEGORIES: Category[] = ['EXERCISE', 'STUDY', 'READING', 'ETC'];
 
 export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
   const { refreshGoals } = useGoals();
@@ -18,6 +21,10 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [goalConfirmed, setGoalConfirmed] = useState<string | null>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualCategory, setManualCategory] = useState<Category>('ETC');
+  const [manualError, setManualError] = useState('');
 
   async function sendMessages(nextMessages: ChatMessage[]) {
     setError('');
@@ -46,6 +53,17 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
 
   function handleRetry() {
     sendMessages(messages);
+  }
+
+  async function handleManualSubmit() {
+    if (manualTitle.trim().length === 0) return;
+    setManualError('');
+    try {
+      const goal = await createGoal(manualTitle.trim(), manualCategory);
+      setGoalConfirmed(goal.title);
+    } catch {
+      setManualError('목표를 만들지 못했어요');
+    }
   }
 
   if (goalConfirmed) {
@@ -139,34 +157,102 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
         </Text>
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', padding: 14 }}>
-        <TextInput
-          testID="chat-input"
-          value={input}
-          onChangeText={setInput}
-          placeholder="메시지를 입력하세요"
-          placeholderTextColor={colors.inkFaint}
-          style={{
-            flex: 1,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderWidth: 1.5,
-            borderColor: colors.border,
-            borderRadius: 22,
-            backgroundColor: colors.card,
-            fontFamily: fonts.body,
-            fontSize: 14,
-            color: colors.ink,
-          }}
-        />
-        <TouchableOpacity
-          testID="chat-send"
-          onPress={handleSend}
-          style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Text style={{ color: '#fff', fontSize: 18 }}>↑</Text>
-        </TouchableOpacity>
-      </View>
+      {manualMode ? (
+        <View style={{ padding: 14, borderTopWidth: 1, borderTopColor: colors.border, gap: 10 }}>
+          <TextInput
+            testID="onboarding-manual-title"
+            value={manualTitle}
+            onChangeText={setManualTitle}
+            placeholder="목표 제목 (예: 매일 30분 걷기)"
+            placeholderTextColor={colors.inkFaint}
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderWidth: 1.5,
+              borderColor: colors.border,
+              borderRadius: 16,
+              backgroundColor: colors.card,
+              fontFamily: fonts.body,
+              fontSize: 14,
+              color: colors.ink,
+            }}
+          />
+          <View testID="onboarding-manual-category-picker" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {CATEGORIES.map((c) => (
+              <TouchableOpacity
+                key={c}
+                testID={`onboarding-manual-category-${c}`}
+                onPress={() => setManualCategory(c)}
+                style={{
+                  paddingHorizontal: 13,
+                  paddingVertical: 8,
+                  borderRadius: 14,
+                  backgroundColor: manualCategory === c ? categoryMeta[c].color : colors.card,
+                  borderWidth: manualCategory === c ? 0 : 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text style={{ fontFamily: fonts.heading, fontSize: 12, color: manualCategory === c ? '#fff' : colors.inkMuted }}>
+                  {categoryMeta[c].label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {manualError ? (
+            <Text testID="onboarding-manual-error" style={{ fontFamily: fonts.body, color: colors.fail, fontSize: 12 }}>
+              {manualError}
+            </Text>
+          ) : null}
+          <TouchableOpacity
+            testID="onboarding-manual-submit"
+            onPress={handleManualSubmit}
+            style={{ backgroundColor: colors.green, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+          >
+            <Text style={{ fontFamily: fonts.heading, color: '#fff', fontSize: 15 }}>이 목표로 시작하기</Text>
+          </TouchableOpacity>
+          <TouchableOpacity testID="onboarding-manual-cancel" onPress={() => setManualMode(false)} style={{ alignItems: 'center' }}>
+            <Text style={{ fontFamily: fonts.body, color: colors.inkMuted, fontSize: 12 }}>다시 대화로 돌아가기</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', padding: 14, paddingBottom: 4 }}>
+            <TextInput
+              testID="chat-input"
+              value={input}
+              onChangeText={setInput}
+              placeholder="메시지를 입력하세요"
+              placeholderTextColor={colors.inkFaint}
+              style={{
+                flex: 1,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                borderWidth: 1.5,
+                borderColor: colors.border,
+                borderRadius: 22,
+                backgroundColor: colors.card,
+                fontFamily: fonts.body,
+                fontSize: 14,
+                color: colors.ink,
+              }}
+            />
+            <TouchableOpacity
+              testID="chat-send"
+              onPress={handleSend}
+              style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ color: '#fff', fontSize: 18 }}>↑</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            testID="onboarding-manual-toggle"
+            onPress={() => setManualMode(true)}
+            style={{ alignItems: 'center', paddingBottom: 12 }}
+          >
+            <Text style={{ fontFamily: fonts.body, color: colors.inkMuted, fontSize: 12 }}>AI 없이 직접 입력할게요</Text>
+          </TouchableOpacity>
+        </>
+      )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

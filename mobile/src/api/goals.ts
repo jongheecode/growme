@@ -25,6 +25,16 @@ export async function listGoals(): Promise<Goal[]> {
   return res.json();
 }
 
+// AI 챗이 막혔을 때(크레딧 소진/API 장애) 쓰는 수동 목표 생성 폴백.
+export async function createGoal(title: string, category: Category): Promise<Goal> {
+  const res = await apiFetch('/api/goals', {
+    method: 'POST',
+    body: JSON.stringify({ title, category }),
+  });
+  if (!res.ok) throw new Error('목표를 만들지 못했어요');
+  return res.json();
+}
+
 export async function sendGoalChatMessage(messages: ChatMessage[]): Promise<ChatResult> {
   const res = await apiFetch('/api/goals/chat', {
     method: 'POST',

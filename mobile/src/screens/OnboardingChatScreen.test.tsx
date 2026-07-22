@@ -92,4 +92,43 @@ describe('OnboardingChatScreen', () => {
     fireEvent.press(screen.getByTestId('onboarding-cancel'));
     expect(onDone).toHaveBeenCalled();
   });
+
+  it('creates a goal manually as an AI fallback and shows the confirmation screen', async () => {
+    (goalsApi.createGoal as jest.Mock).mockResolvedValueOnce({
+      id: 'g2',
+      title: '매일 스트레칭',
+      category: 'EXERCISE',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    render(<OnboardingChatScreen canCancel={false} onDone={() => {}} />);
+
+    fireEvent.press(screen.getByTestId('onboarding-manual-toggle'));
+    fireEvent.changeText(screen.getByTestId('onboarding-manual-title'), '매일 스트레칭');
+    fireEvent.press(screen.getByTestId('onboarding-manual-category-EXERCISE'));
+    fireEvent.press(screen.getByTestId('onboarding-manual-submit'));
+
+    await waitFor(() => expect(screen.getByTestId('goal-confirmed')).toHaveTextContent('매일 스트레칭'));
+    expect(goalsApi.createGoal).toHaveBeenCalledWith('매일 스트레칭', 'EXERCISE');
+  });
+
+  it('shows an error when manual goal creation fails', async () => {
+    (goalsApi.createGoal as jest.Mock).mockRejectedValueOnce(new Error('목표를 만들지 못했어요'));
+    render(<OnboardingChatScreen canCancel={false} onDone={() => {}} />);
+
+    fireEvent.press(screen.getByTestId('onboarding-manual-toggle'));
+    fireEvent.changeText(screen.getByTestId('onboarding-manual-title'), '매일 스트레칭');
+    fireEvent.press(screen.getByTestId('onboarding-manual-submit'));
+
+    await waitFor(() => expect(screen.getByTestId('onboarding-manual-error')).toBeTruthy());
+  });
+
+  it('returns to the chat view when manual entry is cancelled', () => {
+    render(<OnboardingChatScreen canCancel={false} onDone={() => {}} />);
+
+    fireEvent.press(screen.getByTestId('onboarding-manual-toggle'));
+    expect(screen.getByTestId('onboarding-manual-title')).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('onboarding-manual-cancel'));
+    expect(screen.getByTestId('chat-input')).toBeTruthy();
+  });
 });

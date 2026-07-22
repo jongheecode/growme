@@ -10,6 +10,15 @@ import SignupScreen from './SignupScreen';
 
 jest.mock('../api/auth');
 jest.mock('../oauth');
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      apiBase: 'http://localhost:4000',
+      googleClientId: 'test-google-client-id',
+      kakaoClientId: 'test-kakao-client-id',
+    },
+  },
+}));
 
 function DummyForgotPassword() {
   return (
