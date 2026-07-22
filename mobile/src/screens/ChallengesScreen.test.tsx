@@ -62,10 +62,22 @@ describe('ChallengesScreen', () => {
     await waitFor(() => expect(screen.getByTestId('challenge-name-input')).toBeTruthy());
 
     fireEvent.changeText(screen.getByTestId('challenge-name-input'), '새 챌린지');
-    fireEvent.changeText(screen.getByTestId('challenge-target-xp-input'), '200');
+    fireEvent.press(screen.getByTestId('challenge-target-xp-trigger'));
+    await waitFor(() => expect(screen.getByTestId('xp-chip-200')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('xp-chip-200'));
     fireEvent.press(screen.getByTestId('create-challenge-submit'));
 
-    await waitFor(() => expect(challengesApi.createChallenge).toHaveBeenCalled());
+    await waitFor(() => expect(challengesApi.createChallenge).toHaveBeenCalledWith('새 챌린지', 200, expect.any(String), expect.any(String)));
+  });
+
+  it('picks a target XP from the chip picker', async () => {
+    renderChallenges();
+    await waitFor(() => expect(screen.getByTestId('challenge-target-xp-trigger')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('challenge-target-xp-trigger'));
+    fireEvent.press(screen.getByTestId('xp-chip-500'));
+
+    expect(screen.getByTestId('challenge-target-xp-trigger')).toHaveTextContent('목표 500 XP');
   });
 
   it('joins a challenge by invite code', async () => {
