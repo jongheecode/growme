@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { AuthProvider } from '../context/AuthContext';
+import * as notifications from '../notifications';
 import ProfileScreen from './ProfileScreen';
 
 const mockStartAddGoal = jest.fn();
@@ -16,6 +17,11 @@ jest.mock('../api/users', () => ({
   getMe: jest.fn(() =>
     Promise.resolve({ id: 'u1', email: 'a@b.com', nickname: '종이', bio: null, createdAt: '2026-03-01T00:00:00.000Z' })
   ),
+}));
+
+jest.mock('../notifications', () => ({
+  isReminderEnabled: jest.fn(() => Promise.resolve(false)),
+  setReminderEnabled: jest.fn(() => Promise.resolve(true)),
 }));
 
 beforeEach(() => {
@@ -59,6 +65,22 @@ describe('ProfileScreen', () => {
     renderProfile();
     await waitFor(() => expect(screen.getByTestId('profile-nickname')).toHaveTextContent('종이'));
     expect(screen.getByTestId('profile-goal-count')).toHaveTextContent('2');
+  });
+
+  it('turns the mission reminder on', async () => {
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('reminder-toggle')).toBeTruthy());
+    fireEvent(screen.getByTestId('reminder-toggle'), 'valueChange', true);
+    await waitFor(() => expect(notifications.setReminderEnabled).toHaveBeenCalledWith(true));
+    expect(screen.queryByTestId('reminder-error')).toBeNull();
+  });
+
+  it('shows an error when notification permission is denied', async () => {
+    (notifications.setReminderEnabled as jest.Mock).mockResolvedValueOnce(false);
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('reminder-toggle')).toBeTruthy());
+    fireEvent(screen.getByTestId('reminder-toggle'), 'valueChange', true);
+    await waitFor(() => expect(screen.getByTestId('reminder-error')).toBeTruthy());
   });
 
   it('starts adding a goal when the button is pressed', async () => {

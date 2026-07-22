@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { useGoals } from '../context/GoalsContext';
 import { getMe, Me } from '../api/users';
+import { isReminderEnabled, setReminderEnabled } from '../notifications';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
 import Icon, { IconName } from '../components/Icon';
 import { colors, fonts } from '../theme';
@@ -28,12 +29,25 @@ export default function ProfileScreen() {
   const { startAddGoal, goals } = useGoals();
   const navigation = useNavigation<Nav>();
   const [me, setMe] = useState<Me | null>(null);
+  const [reminderOn, setReminderOn] = useState(false);
+  const [reminderError, setReminderError] = useState('');
 
   useEffect(() => {
     getMe()
       .then(setMe)
       .catch(() => {});
+    isReminderEnabled().then(setReminderOn);
   }, []);
+
+  async function handleToggleReminder(next: boolean) {
+    setReminderError('');
+    const ok = await setReminderEnabled(next);
+    if (!ok) {
+      setReminderError('알림 권한이 필요해요. 기기 설정에서 허용해주세요.');
+      return;
+    }
+    setReminderOn(next);
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, padding: 18 }} edges={['top']}>
@@ -101,6 +115,28 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      <View
+        testID="reminder-row"
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 18,
+          padding: 14,
+          marginTop: 14,
+        }}
+      >
+        <Text style={{ fontFamily: fonts.heading, fontSize: 14, color: colors.ink }}>오늘 미션 리마인더</Text>
+        <Switch testID="reminder-toggle" value={reminderOn} onValueChange={handleToggleReminder} />
+      </View>
+      {reminderError ? (
+        <Text testID="reminder-error" style={{ fontFamily: fonts.body, fontSize: 12, color: colors.fail, marginTop: 6 }}>
+          {reminderError}
+        </Text>
+      ) : null}
       <View style={{ marginTop: 18, gap: 10 }}>
         <TouchableOpacity
           testID="add-goal-button"
