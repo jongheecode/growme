@@ -77,6 +77,8 @@ export default function MissionModal({ task, onClose, onComplete }: Props) {
   }
 
   const cat = categoryMeta[task.category];
+  const recommendedSeconds = cat.recommendedMinutes * 60;
+  const bonusReached = elapsedSeconds >= recommendedSeconds;
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={handleClose}>
@@ -99,10 +101,20 @@ export default function MissionModal({ task, onClose, onComplete }: Props) {
           {task.status === 'PENDING' ? (
             <>
               <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 22, padding: 24, alignItems: 'center', marginBottom: 14 }}>
-                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkMuted, marginBottom: 6 }}>집중 타이머 (선택)</Text>
-                <Text testID="mission-timer" style={{ fontFamily: fonts.heading, fontSize: 48, color: colors.ink }}>
+                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkMuted, marginBottom: 6 }}>
+                  {`집중 타이머 (권장 ${cat.recommendedMinutes}분, 선택)`}
+                </Text>
+                <Text
+                  testID="mission-timer"
+                  style={{ fontFamily: fonts.heading, fontSize: 48, color: bonusReached ? colors.green : colors.ink }}
+                >
                   {formatElapsed(elapsedSeconds)}
                 </Text>
+                {bonusReached ? (
+                  <Text testID="mission-bonus-hint" style={{ fontFamily: fonts.heading, fontSize: 12, color: colors.green, marginTop: 4 }}>
+                    🔥 보너스 XP 조건 달성!
+                  </Text>
+                ) : null}
                 {sessionId ? (
                   <TouchableOpacity
                     testID="mission-timer-stop"

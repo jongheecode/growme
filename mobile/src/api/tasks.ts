@@ -20,6 +20,11 @@ export interface Task {
   reactionShownAt: string | null;
 }
 
+export interface CompletedTask extends Task {
+  /** 카테고리별 권장 집중 시간을 타이머로 채우고 완료하면 true — xpValue에 이미 보너스가 반영돼 있음 */
+  bonusApplied: boolean;
+}
+
 export async function listTasks(): Promise<Task[]> {
   const res = await apiFetch('/api/tasks');
   if (!res.ok) throw new Error('할일 목록을 불러오지 못했어요');
@@ -41,7 +46,7 @@ export async function createTask(
   return res.json();
 }
 
-export async function completeTask(id: string): Promise<Task> {
+export async function completeTask(id: string): Promise<CompletedTask> {
   const res = await apiFetch(`/api/tasks/${id}/complete`, { method: 'PATCH' });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}) as { error?: string });

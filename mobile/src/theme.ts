@@ -30,11 +30,13 @@ export const speciesPalette = {
 
 export type DesignSpecies = keyof typeof speciesPalette;
 
+// 백엔드 backend/src/constants.ts의 RECOMMENDED_MINUTES와 값을 맞춰서
+// 관리한다(둘 다 정적 상수라 공유 패키지 없이 수동 동기화).
 export const categoryMeta = {
-  EXERCISE: { label: '운동', color: '#EE9E86' },
-  STUDY: { label: '공부', color: '#6FA8D8' },
-  READING: { label: '독서', color: '#B7A6E4' },
-  ETC: { label: '기타', color: '#F3C969' },
+  EXERCISE: { label: '운동', color: '#EE9E86', recommendedMinutes: 30 },
+  STUDY: { label: '공부', color: '#6FA8D8', recommendedMinutes: 45 },
+  READING: { label: '독서', color: '#B7A6E4', recommendedMinutes: 60 },
+  ETC: { label: '기타', color: '#F3C969', recommendedMinutes: 20 },
 } as const;
 
 export const difficultyLabel = {

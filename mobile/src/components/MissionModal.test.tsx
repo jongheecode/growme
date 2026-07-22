@@ -119,6 +119,33 @@ describe('MissionModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('shows the category recommended time in the timer label', () => {
+    render(<MissionModal task={pendingTask} onClose={() => {}} onComplete={() => {}} />);
+    expect(screen.getByText(/권장 45분/)).toBeTruthy();
+  });
+
+  it('does not show the bonus hint before the recommended time is reached', async () => {
+    render(<MissionModal task={pendingTask} onClose={() => {}} onComplete={() => {}} />);
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('mission-timer-start'));
+    });
+    act(() => {
+      jest.advanceTimersByTime(60_000);
+    });
+    expect(screen.queryByTestId('mission-bonus-hint')).toBeNull();
+  });
+
+  it('shows the bonus hint once the recommended time (STUDY: 45min) is reached', async () => {
+    render(<MissionModal task={pendingTask} onClose={() => {}} onComplete={() => {}} />);
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('mission-timer-start'));
+    });
+    act(() => {
+      jest.advanceTimersByTime(45 * 60 * 1000);
+    });
+    expect(screen.getByTestId('mission-bonus-hint')).toBeTruthy();
+  });
+
   it('shows a status label without timer controls for a completed task', () => {
     render(<MissionModal task={{ ...pendingTask, status: 'COMPLETED' }} onClose={() => {}} onComplete={() => {}} />);
     expect(screen.getByTestId('mission-status')).toHaveTextContent('완료됨');

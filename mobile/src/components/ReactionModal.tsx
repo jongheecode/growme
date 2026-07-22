@@ -14,11 +14,12 @@ interface Props {
   species?: Species | null;
   stage?: number;
   hatch?: boolean;
+  bonusApplied?: boolean;
 }
 
 const HATCH_REVEAL_DELAY = 1500;
 
-export default function ReactionModal({ visible, text, outcome, onDismiss, xp, points, species, stage, hatch }: Props) {
+export default function ReactionModal({ visible, text, outcome, onDismiss, xp, points, species, stage, hatch, bonusApplied }: Props) {
   const [phase, setPhase] = useState<'egg' | 'reveal'>(hatch ? 'egg' : 'reveal');
   const shake = useRef(new Animated.Value(0)).current;
 
@@ -79,6 +80,11 @@ export default function ReactionModal({ visible, text, outcome, onDismiss, xp, p
               {points != null && (
                 <View style={{ backgroundColor: colors.goldTint, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 14 }}>
                   <Text style={{ fontFamily: fonts.heading, color: colors.goldText }}>{`+${points} P`}</Text>
+                </View>
+              )}
+              {bonusApplied && (
+                <View testID="reaction-bonus-badge" style={{ backgroundColor: colors.greenTint, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 14 }}>
+                  <Text style={{ fontFamily: fonts.heading, color: colors.greenDark }}>🔥 집중 보너스</Text>
                 </View>
               )}
             </View>

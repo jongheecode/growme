@@ -167,6 +167,7 @@ export default function TaskSheet({
                           <Text style={{ fontFamily: fonts.heading, fontSize: 10, color: cat.color }}>{cat.label}</Text>
                         </View>
                         <Text style={{ fontFamily: fonts.body, fontSize: 10, color: colors.inkMuted }}>{difficultyLabel[t.difficulty]}</Text>
+                        <Text style={{ fontFamily: fonts.body, fontSize: 10, color: colors.inkFaint }}>{`· 권장 ${cat.recommendedMinutes}분`}</Text>
                       </View>
                     </View>
                     <Text style={{ fontFamily: fonts.heading, fontSize: 13, color: colors.goldText, backgroundColor: colors.goldTint, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}>

@@ -21,6 +21,7 @@ interface ReactionInfo {
   species?: Species | null;
   stage?: number;
   hatch?: boolean;
+  bonusApplied?: boolean;
 }
 
 export default function HomeScreen() {
@@ -91,10 +92,12 @@ export default function HomeScreen() {
     const prevGrowth = growth;
     let reactionText: string | null = null;
     let xpValue = 0;
+    let bonusApplied = false;
     try {
       const completed = await completeTask(id);
       reactionText = completed.reactionText;
       xpValue = completed.xpValue;
+      bonusApplied = completed.bonusApplied;
     } catch (err) {
       failureMessage = err instanceof Error ? err.message : '할일을 완료하지 못했어요';
     }
@@ -115,6 +118,7 @@ export default function HomeScreen() {
         species: newGrowth?.species ?? null,
         stage: newGrowth?.stage ?? 0,
         hatch,
+        bonusApplied,
       });
     }
     if (failureMessage) setError(failureMessage);
@@ -222,6 +226,7 @@ export default function HomeScreen() {
           species={activeReaction.species}
           stage={activeReaction.stage}
           hatch={activeReaction.hatch}
+          bonusApplied={activeReaction.bonusApplied}
           onDismiss={immediateReaction ? () => setImmediateReaction(null) : handleDismissQueuedReaction}
         />
       ) : null}

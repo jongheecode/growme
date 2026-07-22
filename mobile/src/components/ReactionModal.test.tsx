@@ -25,6 +25,16 @@ describe('ReactionModal', () => {
     expect(screen.getByTestId('reaction-rewards')).toHaveTextContent('+20 XP+20 P');
   });
 
+  it('shows a bonus badge when bonusApplied is true', () => {
+    render(<ReactionModal visible text="정말 잘했어!" outcome="COMPLETED" onDismiss={() => {}} xp={12} points={12} bonusApplied />);
+    expect(screen.getByTestId('reaction-bonus-badge')).toBeTruthy();
+  });
+
+  it('does not show a bonus badge when bonusApplied is false', () => {
+    render(<ReactionModal visible text="정말 잘했어!" outcome="COMPLETED" onDismiss={() => {}} xp={10} points={10} bonusApplied={false} />);
+    expect(screen.queryByTestId('reaction-bonus-badge')).toBeNull();
+  });
+
   it('does not show reward badges for a failure', () => {
     render(<ReactionModal visible text="괜찮아" outcome="FAILED" onDismiss={() => {}} />);
     expect(screen.queryByTestId('reaction-rewards')).toBeNull();
