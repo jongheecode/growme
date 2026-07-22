@@ -1,12 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text, View } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import * as authApi from '../api/auth';
 import LoginScreen from './LoginScreen';
 import SignupScreen from './SignupScreen';
 
 jest.mock('../api/auth');
+
+function DummyForgotPassword() {
+  return (
+    <View>
+      <Text testID="dummy-forgot-password">forgot password</Text>
+    </View>
+  );
+}
 
 function renderLogin() {
   const Stack = createNativeStackNavigator();
@@ -16,6 +25,7 @@ function renderLogin() {
         <Stack.Navigator>
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="ForgotPassword" component={DummyForgotPassword} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
@@ -49,5 +59,11 @@ describe('LoginScreen', () => {
     renderLogin();
     fireEvent.press(screen.getByText('회원가입'));
     await waitFor(() => expect(screen.getByText('회원가입')).toBeTruthy());
+  });
+
+  it('navigates to the forgot password screen', async () => {
+    renderLogin();
+    fireEvent.press(screen.getByTestId('login-forgot-password'));
+    await waitFor(() => expect(screen.getByTestId('dummy-forgot-password')).toBeTruthy());
   });
 });

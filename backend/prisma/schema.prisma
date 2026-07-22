@@ -35,8 +35,19 @@ model User {
   challengesCreated    Challenge[]
   challengeMemberships ChallengeMember[]
   userAccessories      UserAccessory[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@unique([oauthProvider, oauthId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Activity {

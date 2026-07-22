@@ -1,6 +1,16 @@
 import request from 'supertest';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import app from '../app';
+
+vi.mock('../services/mailer', () => ({
+  sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
+}));
+
+import * as mailer from '../services/mailer';
+
+function extractToken(resetLink: string): string {
+  return new URL(resetLink.replace('growme://', 'https://dummy/')).searchParams.get('token')!;
+}
 
 describe('POST /api/auth/signup', () => {
   it('creates a user and returns a token', async () => {
@@ -127,5 +137,59 @@ describe('POST /api/auth/change-password', () => {
       .post('/api/auth/change-password')
       .send({ currentPassword: 'password123', newPassword: 'newpassword456' });
     expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/auth/forgot-password and /reset-password', () => {
+  it('issues a working reset token and lets the user set a new password', async () => {
+    await request(app).post('/api/auth/signup').send({
+      email: 'forgot@example.com',
+      password: 'password123',
+      nickname: '리셋테스터',
+    });
+
+    const forgotRes = await request(app).post('/api/auth/forgot-password').send({ email: 'forgot@example.com' });
+    expect(forgotRes.status).toBe(200);
+    expect(mailer.sendPasswordResetEmail).toHaveBeenCalledWith('forgot@example.com', expect.stringContaining('token='));
+
+    const resetLink = (mailer.sendPasswordResetEmail as unknown as ReturnType<typeof vi.fn>).mock.calls.at(-1)![1] as string;
+    const token = extractToken(resetLink);
+
+    const resetRes = await request(app).post('/api/auth/reset-password').send({ token, newPassword: 'brandnewpass789' });
+    expect(resetRes.status).toBe(200);
+
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'forgot@example.com',
+      password: 'brandnewpass789',
+    });
+    expect(loginRes.status).toBe(200);
+  });
+
+  it('rejects reusing the same reset token twice', async () => {
+    await request(app).post('/api/auth/signup').send({
+      email: 'reuse@example.com',
+      password: 'password123',
+      nickname: '재사용테스터',
+    });
+    await request(app).post('/api/auth/forgot-password').send({ email: 'reuse@example.com' });
+    const resetLink = (mailer.sendPasswordResetEmail as unknown as ReturnType<typeof vi.fn>).mock.calls.at(-1)![1] as string;
+    const token = extractToken(resetLink);
+
+    const first = await request(app).post('/api/auth/reset-password').send({ token, newPassword: 'anotherpass111' });
+    expect(first.status).toBe(200);
+
+    const second = await request(app).post('/api/auth/reset-password').send({ token, newPassword: 'yetanotherpass222' });
+    expect(second.status).toBe(400);
+  });
+
+  it('rejects an invalid token', async () => {
+    const res = await request(app).post('/api/auth/reset-password').send({ token: 'not-a-real-token', newPassword: 'whatever123' });
+    expect(res.status).toBe(400);
+  });
+
+  it('responds with the same generic message for an unknown email (no enumeration)', async () => {
+    const res = await request(app).post('/api/auth/forgot-password').send({ email: 'doesnotexist@example.com' });
+    expect(res.status).toBe(200);
+    expect(mailer.sendPasswordResetEmail).not.toHaveBeenCalledWith('doesnotexist@example.com', expect.anything());
   });
 });

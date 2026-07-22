@@ -94,6 +94,10 @@ export default function LoginScreen() {
           <Text style={{ fontFamily: fonts.heading, color: '#fff', fontSize: 17 }}>로그인</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity testID="login-forgot-password" onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: 16, alignItems: 'center' }}>
+          <Text style={{ fontFamily: fonts.body, color: colors.inkMuted, fontSize: 13 }}>비밀번호를 잊으셨나요?</Text>
+        </TouchableOpacity>
+
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
           <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkMuted }}>아직 계정이 없나요? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Signup')}>

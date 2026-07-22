@@ -1,11 +1,18 @@
+import crypto from 'crypto';
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
+import { sendPasswordResetEmail } from '../services/mailer';
 
 const router = Router();
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+function hashResetToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 export function issueToken(userId: string) {
   return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '30d' });
@@ -78,6 +85,52 @@ router.post('/change-password', requireAuth, async (req: AuthedRequest, res) => 
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
     res.json({ success: true });
   } catch (err) {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!isNonEmptyString(email)) {
+    return res.status(400).json({ error: 'email is required' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user && user.passwordHash) {
+      const token = crypto.randomBytes(32).toString('hex');
+      await prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashResetToken(token),
+          expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+        },
+      });
+      await sendPasswordResetEmail(email, `growme://reset-password?token=${token}`);
+    }
+    // 계정 존재 여부가 드러나지 않도록 항상 같은 응답을 준다.
+    res.json({ message: '해당 이메일 계정이 있다면 재설정 링크를 보냈어요' });
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!isNonEmptyString(token) || !isNonEmptyString(newPassword)) {
+    return res.status(400).json({ error: 'token and newPassword are required' });
+  }
+  try {
+    const record = await prisma.passwordResetToken.findUnique({ where: { tokenHash: hashResetToken(token) } });
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      return res.status(400).json({ error: 'invalid or expired token' });
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+      prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+    ]);
+    res.json({ success: true });
+  } catch {
     res.status(500).json({ error: 'internal server error' });
   }
 });
