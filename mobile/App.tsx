@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
 import { GoalsProvider } from './src/context/GoalsContext';
 import RootNavigator from './src/navigation/RootNavigator';
+import OfflineBanner from './src/components/OfflineBanner';
 import { colors } from './src/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -25,12 +26,15 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <GoalsProvider>
-          <RootNavigator />
-        </GoalsProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner />
+      <SafeAreaProvider>
+        <AuthProvider>
+          <GoalsProvider>
+            <RootNavigator />
+          </GoalsProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </View>
   );
 }

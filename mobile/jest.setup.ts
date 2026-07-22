@@ -37,3 +37,9 @@ jest.mock('expo-crypto', () => ({
 jest.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: jest.fn(),
 }));
+
+jest.mock('@react-native-community/netinfo', () => ({
+  useNetInfo: jest.fn(() => ({ isConnected: true, isInternetReachable: true })),
+  addEventListener: jest.fn(() => () => {}),
+  fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
+}));
