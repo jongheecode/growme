@@ -51,3 +51,23 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
   if (!res.ok) throw new Error('비밀번호를 변경하지 못했어요');
 }
+
+export async function loginWithGoogle(idToken: string): Promise<string> {
+  const res = await apiFetch('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ idToken }),
+  });
+  if (!res.ok) throw new Error('구글 로그인에 실패했어요');
+  const data = (await res.json()) as AuthResponse;
+  return data.token;
+}
+
+export async function loginWithKakao(accessToken: string): Promise<string> {
+  const res = await apiFetch('/api/auth/kakao', {
+    method: 'POST',
+    body: JSON.stringify({ accessToken }),
+  });
+  if (!res.ok) throw new Error('카카오 로그인에 실패했어요');
+  const data = (await res.json()) as AuthResponse;
+  return data.token;
+}

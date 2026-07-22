@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { login as loginApi } from '../api/auth';
+import { login as loginApi, loginWithGoogle, loginWithKakao } from '../api/auth';
+import { requestGoogleIdToken, requestKakaoAccessToken } from '../oauth';
 import { useAuth } from '../context/AuthContext';
 import { AuthStackParamList } from '../navigation/AuthStack';
 import KkumiView from '../components/KkumiView';
@@ -36,6 +37,28 @@ export default function LoginScreen() {
       await login(token);
     } catch {
       setError('이메일 또는 비밀번호가 올바르지 않아요');
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError('');
+    try {
+      const idToken = await requestGoogleIdToken();
+      const token = await loginWithGoogle(idToken);
+      await login(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '구글 로그인에 실패했어요');
+    }
+  }
+
+  async function handleKakaoLogin() {
+    setError('');
+    try {
+      const accessToken = await requestKakaoAccessToken();
+      const token = await loginWithKakao(accessToken);
+      await login(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '카카오 로그인에 실패했어요');
     }
   }
 
@@ -97,6 +120,29 @@ export default function LoginScreen() {
         <TouchableOpacity testID="login-forgot-password" onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: 16, alignItems: 'center' }}>
           <Text style={{ fontFamily: fonts.body, color: colors.inkMuted, fontSize: 13 }}>비밀번호를 잊으셨나요?</Text>
         </TouchableOpacity>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24, marginBottom: 16 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+          <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginHorizontal: 10 }}>또는</Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+        </View>
+
+        <View style={{ gap: 10 }}>
+          <TouchableOpacity
+            testID="login-google"
+            onPress={handleGoogleLogin}
+            style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card }}
+          >
+            <Text style={{ fontFamily: fonts.heading, color: colors.ink, fontSize: 14 }}>구글로 계속하기</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="login-kakao"
+            onPress={handleKakaoLogin}
+            style={{ borderRadius: 16, paddingVertical: 14, alignItems: 'center', backgroundColor: '#FEE500' }}
+          >
+            <Text style={{ fontFamily: fonts.heading, color: '#3C1E1E', fontSize: 14 }}>카카오로 계속하기</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
           <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkMuted }}>아직 계정이 없나요? </Text>

@@ -3,6 +3,7 @@
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
+    "scheme": "growme",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -33,10 +34,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#FBF6EE"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
-      "apiBase": "http://192.168.1.100:4000"
+      "apiBase": "http://192.168.1.100:4000",
+      "googleClientId": "",
+      "kakaoClientId": ""
     }
   }
 }

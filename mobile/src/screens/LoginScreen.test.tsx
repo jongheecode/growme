@@ -4,10 +4,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import * as authApi from '../api/auth';
+import * as oauth from '../oauth';
 import LoginScreen from './LoginScreen';
 import SignupScreen from './SignupScreen';
 
 jest.mock('../api/auth');
+jest.mock('../oauth');
 
 function DummyForgotPassword() {
   return (
@@ -65,5 +67,43 @@ describe('LoginScreen', () => {
     renderLogin();
     fireEvent.press(screen.getByTestId('login-forgot-password'));
     await waitFor(() => expect(screen.getByTestId('dummy-forgot-password')).toBeTruthy());
+  });
+
+  it('logs in with google', async () => {
+    (oauth.requestGoogleIdToken as jest.Mock).mockResolvedValueOnce('id-token-1');
+    (authApi.loginWithGoogle as jest.Mock).mockResolvedValueOnce('app-token-1');
+    renderLogin();
+
+    fireEvent.press(screen.getByTestId('login-google'));
+
+    await waitFor(() => expect(authApi.loginWithGoogle).toHaveBeenCalledWith('id-token-1'));
+  });
+
+  it('shows an error when google login fails', async () => {
+    (oauth.requestGoogleIdToken as jest.Mock).mockRejectedValueOnce(new Error('구글 로그인이 취소됐어요'));
+    renderLogin();
+
+    fireEvent.press(screen.getByTestId('login-google'));
+
+    await waitFor(() => expect(screen.getByTestId('login-error')).toHaveTextContent('구글 로그인이 취소됐어요'));
+  });
+
+  it('logs in with kakao', async () => {
+    (oauth.requestKakaoAccessToken as jest.Mock).mockResolvedValueOnce('access-token-1');
+    (authApi.loginWithKakao as jest.Mock).mockResolvedValueOnce('app-token-2');
+    renderLogin();
+
+    fireEvent.press(screen.getByTestId('login-kakao'));
+
+    await waitFor(() => expect(authApi.loginWithKakao).toHaveBeenCalledWith('access-token-1'));
+  });
+
+  it('shows an error when kakao login fails', async () => {
+    (oauth.requestKakaoAccessToken as jest.Mock).mockRejectedValueOnce(new Error('카카오 로그인이 취소됐어요'));
+    renderLogin();
+
+    fireEvent.press(screen.getByTestId('login-kakao'));
+
+    await waitFor(() => expect(screen.getByTestId('login-error')).toHaveTextContent('카카오 로그인이 취소됐어요'));
   });
 });

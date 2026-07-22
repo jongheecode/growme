@@ -13,11 +13,27 @@ jest.mock('expo-notifications', () => ({
 }));
 
 jest.mock('expo-constants', () => ({
-  default: {
-    expoConfig: {
-      extra: {
-        apiBase: 'http://localhost:4000',
-      },
+  expoConfig: {
+    extra: {
+      apiBase: 'http://localhost:4000',
+      googleClientId: '',
+      kakaoClientId: '',
     },
   },
+}));
+
+jest.mock('expo-auth-session', () => ({
+  AuthRequest: jest.fn().mockImplementation(() => ({
+    promptAsync: jest.fn(() => Promise.resolve({ type: 'cancel' })),
+  })),
+  ResponseType: { IdToken: 'id_token', Token: 'token', Code: 'code' },
+  makeRedirectUri: jest.fn(() => 'exp://127.0.0.1:8081'),
+}));
+
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'mock-nonce'),
+}));
+
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
 }));
