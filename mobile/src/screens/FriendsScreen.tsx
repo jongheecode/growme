@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { Alert, AlertButton, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import {
   Friend,
   FriendRequest,
@@ -8,11 +8,13 @@ import {
   listFriends,
   requestFriend,
 } from '../api/friends';
+import { blockUser, reportUser } from '../api/safety';
 import KkumiView from '../components/KkumiView';
 import Icon from '../components/Icon';
 import { colors, fonts } from '../theme';
 
 const STAGE_LABEL = ['알', '부화', '새싹', '자람', '만개'];
+const REPORT_REASONS = ['스팸', '부적절한 콘텐츠', '괴롭힘', '기타'];
 
 export default function FriendsScreen() {
   const [requests, setRequests] = useState<FriendRequest[]>([]);
@@ -53,6 +55,42 @@ export default function FriendsScreen() {
     } catch {
       setError('요청을 수락하지 못했어요');
     }
+  }
+
+  async function handleBlock(friend: Friend) {
+    try {
+      await blockUser(friend.id);
+      await load();
+    } catch {
+      setError('차단하지 못했어요');
+    }
+  }
+
+  async function handleReport(friend: Friend, reason: string) {
+    try {
+      await reportUser(friend.id, reason);
+    } catch {
+      setError('신고를 접수하지 못했어요');
+    }
+  }
+
+  function openReportReasons(friend: Friend) {
+    Alert.alert(
+      '신고 사유 선택',
+      undefined,
+      [
+        ...REPORT_REASONS.map((reason): AlertButton => ({ text: reason, onPress: () => handleReport(friend, reason) })),
+        { text: '취소', style: 'cancel' },
+      ]
+    );
+  }
+
+  function openFriendActions(friend: Friend) {
+    Alert.alert(friend.nickname, undefined, [
+      { text: '신고', onPress: () => openReportReasons(friend) },
+      { text: '차단', style: 'destructive', onPress: () => handleBlock(friend) },
+      { text: '취소', style: 'cancel' },
+    ]);
   }
 
   if (error) {
@@ -174,6 +212,9 @@ export default function FriendsScreen() {
                 <Text style={{ fontFamily: fonts.heading, fontSize: 16, color: colors.green }}>{f.totalXp}</Text>
                 <Text style={{ fontFamily: fonts.body, fontSize: 10, color: colors.inkFaint }}>누적 XP</Text>
               </View>
+              <TouchableOpacity testID={`friend-actions-${f.id}`} onPress={() => openFriendActions(f)} style={{ padding: 6 }}>
+                <Text style={{ color: colors.inkFaint, fontSize: 18 }}>⋯</Text>
+              </TouchableOpacity>
             </View>
           ))}
         </View>

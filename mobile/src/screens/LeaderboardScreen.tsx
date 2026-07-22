@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { Alert, AlertButton, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LeaderboardEntry, LeaderboardRange, LeaderboardScope, getLeaderboard } from '../api/leaderboard';
+import { getMe } from '../api/users';
+import { blockUser, reportUser } from '../api/safety';
 import { colors, fonts } from '../theme';
+
+const REPORT_REASONS = ['스팸', '부적절한 콘텐츠', '괴롭힘', '기타'];
 
 function toggleStyle(active: boolean) {
   return {
@@ -18,6 +22,7 @@ export default function LeaderboardScreen() {
   const [range, setRange] = useState<LeaderboardRange>('alltime');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [error, setError] = useState('');
+  const [myUserId, setMyUserId] = useState<string | null>(null);
 
   const load = useCallback(async (s: LeaderboardScope, r: LeaderboardRange) => {
     try {
@@ -32,6 +37,48 @@ export default function LeaderboardScreen() {
   useEffect(() => {
     load(scope, range);
   }, [scope, range, load]);
+
+  useEffect(() => {
+    getMe()
+      .then((me) => setMyUserId(me.id))
+      .catch(() => {});
+  }, []);
+
+  async function handleBlock(entry: LeaderboardEntry) {
+    try {
+      await blockUser(entry.userId);
+      await load(scope, range);
+    } catch {
+      setError('차단하지 못했어요');
+    }
+  }
+
+  async function handleReport(entry: LeaderboardEntry, reason: string) {
+    try {
+      await reportUser(entry.userId, reason);
+    } catch {
+      setError('신고를 접수하지 못했어요');
+    }
+  }
+
+  function openReportReasons(entry: LeaderboardEntry) {
+    Alert.alert(
+      '신고 사유 선택',
+      undefined,
+      [
+        ...REPORT_REASONS.map((reason): AlertButton => ({ text: reason, onPress: () => handleReport(entry, reason) })),
+        { text: '취소', style: 'cancel' },
+      ]
+    );
+  }
+
+  function openEntryActions(entry: LeaderboardEntry) {
+    Alert.alert(entry.nickname, undefined, [
+      { text: '신고', onPress: () => openReportReasons(entry) },
+      { text: '차단', style: 'destructive', onPress: () => handleBlock(entry) },
+      { text: '취소', style: 'cancel' },
+    ]);
+  }
 
   if (error) {
     return (
@@ -73,6 +120,11 @@ export default function LeaderboardScreen() {
           >
             <Text style={{ width: 26, fontFamily: fonts.heading, fontSize: 16, color: colors.goldText, textAlign: 'center' }}>{e.rank}</Text>
             <Text style={{ flex: 1, fontFamily: fonts.heading, fontSize: 15, color: colors.ink }}>{`${e.nickname} — ${e.totalXp}XP`}</Text>
+            {e.userId !== myUserId ? (
+              <TouchableOpacity testID={`leaderboard-actions-${e.userId}`} onPress={() => openEntryActions(e)} style={{ padding: 6 }}>
+                <Text style={{ color: colors.inkFaint, fontSize: 18 }}>⋯</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         ))}
       </ScrollView>

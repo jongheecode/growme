@@ -3,6 +3,7 @@ import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { isNonEmptyString } from './auth';
 import { getTotalXp, ensureHatched, getGrowthStageInfo } from '../services/growth';
+import { getMutuallyBlockedUserIds } from '../services/blocklist';
 
 const router = Router();
 
@@ -13,6 +14,11 @@ router.post('/request', requireAuth, async (req: AuthedRequest, res) => {
     const target = await prisma.user.findFirst({ where: { nickname } });
     if (!target) return res.status(404).json({ error: 'user not found' });
     if (target.id === req.userId) return res.status(400).json({ error: 'cannot friend yourself' });
+
+    const blockedIds = await getMutuallyBlockedUserIds(req.userId!);
+    if (blockedIds.includes(target.id)) {
+      return res.status(403).json({ error: 'cannot friend a blocked user' });
+    }
 
     const existing = await prisma.friendship.findFirst({
       where: {
@@ -35,8 +41,9 @@ router.post('/request', requireAuth, async (req: AuthedRequest, res) => {
 
 router.get('/requests', requireAuth, async (req: AuthedRequest, res) => {
   try {
+    const blockedIds = await getMutuallyBlockedUserIds(req.userId!);
     const requests = await prisma.friendship.findMany({
-      where: { addresseeId: req.userId!, status: 'PENDING' },
+      where: { addresseeId: req.userId!, status: 'PENDING', requesterId: { notIn: blockedIds } },
       include: { requester: { select: { nickname: true } } },
     });
     res.json(

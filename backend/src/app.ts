@@ -14,6 +14,7 @@ import friendsRouter from './routes/friends';
 import leaderboardRouter from './routes/leaderboard';
 import challengesRouter from './routes/challenges';
 import shopRouter from './routes/shop';
+import safetyRouter from './routes/safety';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean);
 
@@ -45,6 +46,7 @@ app.use('/api/friends', friendsRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/challenges', challengesRouter);
 app.use('/api/shop', shopRouter);
+app.use('/api/safety', safetyRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

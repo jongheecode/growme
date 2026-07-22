@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
+import { getMutuallyBlockedUserIds } from '../services/blocklist';
 
 const router = Router();
 
@@ -20,6 +21,8 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
       ];
     }
 
+    const blockedIds = await getMutuallyBlockedUserIds(req.userId!);
+
     const since = new Date();
     since.setDate(since.getDate() - 7);
 
@@ -27,7 +30,7 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
       by: ['userId'],
       where: {
         status: 'COMPLETED',
-        ...(userIds ? { userId: { in: userIds } } : {}),
+        userId: { notIn: blockedIds, ...(userIds ? { in: userIds } : {}) },
         ...(range === 'weekly' ? { completedAt: { gte: since } } : {}),
       },
       _sum: { xpValue: true },

@@ -1,8 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import * as friendsApi from '../api/friends';
+import * as safetyApi from '../api/safety';
 import FriendsScreen from './FriendsScreen';
 
 jest.mock('../api/friends');
+jest.mock('../api/safety');
 
 const requests: friendsApi.FriendRequest[] = [
   { id: 'r1', requesterId: 'u1', requesterNickname: '철수' },
@@ -45,6 +48,37 @@ describe('FriendsScreen', () => {
     fireEvent.changeText(screen.getByTestId('friend-nickname-input'), '영희');
     fireEvent.press(screen.getByTestId('send-request-button'));
     await waitFor(() => expect(friendsApi.requestFriend).toHaveBeenCalledWith('영희'));
+  });
+
+  it('blocks a friend from the actions menu', async () => {
+    (friendsApi.listFriends as jest.Mock).mockResolvedValue(friends);
+    (safetyApi.blockUser as jest.Mock).mockResolvedValueOnce(undefined);
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      const block = buttons?.find((b) => b.text === '차단');
+      block?.onPress?.();
+    });
+    render(<FriendsScreen />);
+    await waitFor(() => expect(screen.getByTestId('friend-actions-u2')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('friend-actions-u2'));
+    await waitFor(() => expect(safetyApi.blockUser).toHaveBeenCalledWith('u2'));
+  });
+
+  it('reports a friend with a chosen reason from the actions menu', async () => {
+    (friendsApi.listFriends as jest.Mock).mockResolvedValue(friends);
+    (safetyApi.reportUser as jest.Mock).mockResolvedValueOnce(undefined);
+    jest.spyOn(Alert, 'alert').mockImplementation((title, _message, buttons) => {
+      if (title === '영희') {
+        buttons?.find((b) => b.text === '신고')?.onPress?.();
+      } else {
+        buttons?.find((b) => b.text === '스팸')?.onPress?.();
+      }
+    });
+    render(<FriendsScreen />);
+    await waitFor(() => expect(screen.getByTestId('friend-actions-u2')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('friend-actions-u2'));
+    await waitFor(() => expect(safetyApi.reportUser).toHaveBeenCalledWith('u2', '스팸'));
   });
 
   it('shows an error with a retry button on load failure', async () => {

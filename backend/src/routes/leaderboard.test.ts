@@ -95,6 +95,25 @@ describe('GET /api/leaderboard', () => {
     expect(entry.totalXp).toBe(15);
   });
 
+  it('excludes a blocked user from global scope', async () => {
+    const a = await signup(`차단랭킹A${Date.now()}`);
+    const b = await signup(`차단랭킹B${Date.now()}`);
+    await completeTaskWithXp(a.userId, 10, new Date());
+    await completeTaskWithXp(b.userId, 999, new Date());
+
+    await request(app)
+      .post('/api/safety/block')
+      .set('Authorization', `Bearer ${a.token}`)
+      .send({ userId: b.userId });
+
+    const res = await request(app)
+      .get('/api/leaderboard?scope=global&range=alltime')
+      .set('Authorization', `Bearer ${a.token}`);
+    const ids = res.body.map((e: { userId: string }) => e.userId);
+    expect(ids).toContain(a.userId);
+    expect(ids).not.toContain(b.userId);
+  });
+
   it('returns 401 without an auth token', async () => {
     const res = await request(app).get('/api/leaderboard?scope=global&range=alltime');
     expect(res.status).toBe(401);

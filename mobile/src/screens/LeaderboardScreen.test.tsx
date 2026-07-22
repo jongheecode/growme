@@ -1,8 +1,13 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import * as leaderboardApi from '../api/leaderboard';
+import * as usersApi from '../api/users';
+import * as safetyApi from '../api/safety';
 import LeaderboardScreen from './LeaderboardScreen';
 
 jest.mock('../api/leaderboard');
+jest.mock('../api/users');
+jest.mock('../api/safety');
 
 const globalAlltime: leaderboardApi.LeaderboardEntry[] = [
   { userId: 'u1', nickname: '철수', totalXp: 100, rank: 1 },
@@ -12,6 +17,13 @@ const globalAlltime: leaderboardApi.LeaderboardEntry[] = [
 beforeEach(() => {
   jest.clearAllMocks();
   (leaderboardApi.getLeaderboard as jest.Mock).mockResolvedValue(globalAlltime);
+  (usersApi.getMe as jest.Mock).mockResolvedValue({
+    id: 'u1',
+    email: 'me@example.com',
+    nickname: '철수',
+    bio: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  });
 });
 
 describe('LeaderboardScreen', () => {
@@ -36,6 +48,40 @@ describe('LeaderboardScreen', () => {
 
     fireEvent.press(screen.getByTestId('range-weekly'));
     await waitFor(() => expect(leaderboardApi.getLeaderboard).toHaveBeenCalledWith('global', 'weekly'));
+  });
+
+  it('hides the actions menu on my own row', async () => {
+    render(<LeaderboardScreen />);
+    await waitFor(() => expect(screen.getByTestId('leaderboard-actions-u2')).toBeTruthy());
+    expect(screen.queryByTestId('leaderboard-actions-u1')).toBeNull();
+  });
+
+  it('blocks another user from the actions menu', async () => {
+    (safetyApi.blockUser as jest.Mock).mockResolvedValueOnce(undefined);
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((b) => b.text === '차단')?.onPress?.();
+    });
+    render(<LeaderboardScreen />);
+    await waitFor(() => expect(screen.getByTestId('leaderboard-actions-u2')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('leaderboard-actions-u2'));
+    await waitFor(() => expect(safetyApi.blockUser).toHaveBeenCalledWith('u2'));
+  });
+
+  it('reports another user with a chosen reason from the actions menu', async () => {
+    (safetyApi.reportUser as jest.Mock).mockResolvedValueOnce(undefined);
+    jest.spyOn(Alert, 'alert').mockImplementation((title, _message, buttons) => {
+      if (title === '영희') {
+        buttons?.find((b) => b.text === '신고')?.onPress?.();
+      } else {
+        buttons?.find((b) => b.text === '괴롭힘')?.onPress?.();
+      }
+    });
+    render(<LeaderboardScreen />);
+    await waitFor(() => expect(screen.getByTestId('leaderboard-actions-u2')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('leaderboard-actions-u2'));
+    await waitFor(() => expect(safetyApi.reportUser).toHaveBeenCalledWith('u2', '괴롭힘'));
   });
 
   it('shows an error with a retry button on load failure', async () => {
