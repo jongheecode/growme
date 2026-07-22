@@ -5,6 +5,7 @@ import { Task, Category, Difficulty, DueChoice, listTasks, createTask, completeT
 import { GrowthState, Species, getGrowth } from '../api/growth';
 import { EquippedAccessory, getMyAccessories } from '../api/shop';
 import { TaskSuggestion, suggestTasks } from '../api/goals';
+import { syncMissionReminder } from '../notifications';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
 import KkumiInfoModal from '../components/KkumiInfoModal';
@@ -12,6 +13,12 @@ import ReactionModal from '../components/ReactionModal';
 import MissionModal from '../components/MissionModal';
 import TaskSheet from '../components/TaskSheet';
 import { colors, fonts } from '../theme';
+
+function isDueToday(dueAt: string): boolean {
+  const d = new Date(dueAt);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
 
 interface ReactionInfo {
   text: string;
@@ -52,6 +59,8 @@ export default function HomeScreen() {
       setReactionQueue((current) =>
         current.length > 0 ? current : taskList.filter((t) => t.reactionText && !t.reactionShownAt)
       );
+      const hasPendingToday = taskList.some((t) => t.status === 'PENDING' && isDueToday(t.dueAt));
+      syncMissionReminder(hasPendingToday).catch(() => {});
       return growthState;
     } catch {
       setError('불러오지 못했어요');

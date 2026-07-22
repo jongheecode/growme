@@ -9,7 +9,7 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
   scheduleNotificationAsync: jest.fn(() => Promise.resolve('mock-notification-id')),
   cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
-  SchedulableTriggerInputTypes: { DAILY: 'daily' },
+  SchedulableTriggerInputTypes: { DAILY: 'daily', DATE: 'date' },
 }));
 
 jest.mock('expo-constants', () => ({
