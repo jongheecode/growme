@@ -68,3 +68,8 @@ export async function leaveChallenge(id: string): Promise<void> {
   const res = await apiFetch(`/api/challenges/${id}/leave`, { method: 'DELETE' });
   if (!res.ok) throw new Error('챌린지에서 나가지 못했어요');
 }
+
+export async function deleteChallenge(id: string): Promise<void> {
+  const res = await apiFetch(`/api/challenges/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('챌린지를 삭제하지 못했어요');
+}

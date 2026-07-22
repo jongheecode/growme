@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as challengesApi from '../api/challenges';
@@ -42,6 +43,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (challengesApi.getChallenge as jest.Mock).mockResolvedValue(detailAsCreator);
   (challengesApi.leaveChallenge as jest.Mock).mockResolvedValue(undefined);
+  (challengesApi.deleteChallenge as jest.Mock).mockResolvedValue(undefined);
   (usersApi.getMe as jest.Mock).mockResolvedValue({
     id: 'me',
     email: 'me@example.com',
@@ -75,5 +77,22 @@ describe('ChallengeDetailScreen', () => {
 
     fireEvent.press(screen.getByTestId('leave-challenge-button'));
     await waitFor(() => expect(challengesApi.leaveChallenge).toHaveBeenCalledWith('c1'));
+  });
+
+  it('shows a delete button for the creator instead of a leave button', async () => {
+    renderDetail();
+    await waitFor(() => expect(screen.getByTestId('delete-challenge-button')).toBeTruthy());
+    expect(screen.queryByTestId('leave-challenge-button')).toBeNull();
+  });
+
+  it('deletes the challenge after confirming the alert', async () => {
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((b) => b.style === 'destructive')?.onPress?.();
+    });
+    renderDetail();
+    await waitFor(() => expect(screen.getByTestId('delete-challenge-button')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('delete-challenge-button'));
+    await waitFor(() => expect(challengesApi.deleteChallenge).toHaveBeenCalledWith('c1'));
   });
 });

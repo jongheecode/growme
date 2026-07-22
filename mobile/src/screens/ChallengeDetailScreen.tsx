@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { ChallengeDetail, getChallenge, leaveChallenge } from '../api/challenges';
+import { Alert, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ChallengeDetail, getChallenge, leaveChallenge, deleteChallenge } from '../api/challenges';
 import { Me, getMe } from '../api/users';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
 import { colors, fonts } from '../theme';
 
 type Route = RouteProp<ProfileStackParamList, 'ChallengeDetail'>;
+type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ChallengeDetail'>;
 
 export default function ChallengeDetailScreen() {
   const route = useRoute<Route>();
+  const navigation = useNavigation<Nav>();
   const { challengeId } = route.params;
   const [detail, setDetail] = useState<ChallengeDetail | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -36,6 +39,22 @@ export default function ChallengeDetailScreen() {
     } catch {
       setError('챌린지에서 나가지 못했어요');
     }
+  }
+
+  async function handleDelete() {
+    try {
+      await deleteChallenge(challengeId);
+      navigation.goBack();
+    } catch {
+      setError('챌린지를 삭제하지 못했어요');
+    }
+  }
+
+  function confirmDelete() {
+    Alert.alert('챌린지 삭제', '정말 삭제하시겠어요? 이 작업은 되돌릴 수 없어요.', [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: handleDelete },
+    ]);
   }
 
   if (error) {
@@ -123,7 +142,15 @@ export default function ChallengeDetailScreen() {
         >
           <Text style={{ fontFamily: fonts.heading, color: colors.inkFaint, fontSize: 14 }}>나가기</Text>
         </TouchableOpacity>
-      ) : null}
+      ) : (
+        <TouchableOpacity
+          testID="delete-challenge-button"
+          onPress={confirmDelete}
+          style={{ borderWidth: 1.5, borderColor: colors.fail, borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}
+        >
+          <Text style={{ fontFamily: fonts.heading, color: colors.fail, fontSize: 14 }}>챌린지 삭제</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
