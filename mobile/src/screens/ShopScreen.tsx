@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ShopItem, equipItem, getShopItems, purchaseItem } from '../api/shop';
+import { AccessorySlot, ShopItem, equipItem, getShopItems, purchaseItem } from '../api/shop';
 import { getGrowth } from '../api/growth';
 import KkumiView from '../components/KkumiView';
 import { colors, fonts } from '../theme';
@@ -11,10 +11,23 @@ const BG_PREVIEW_COLOR: Record<string, string> = {
   rainbow_bg: '#F8F0FA',
 };
 
+const FILTERS: { key: AccessorySlot | 'ALL'; label: string }[] = [
+  { key: 'ALL', label: '전체' },
+  { key: 'HAT', label: '모자' },
+  { key: 'FACE', label: '얼굴' },
+  { key: 'BACKGROUND', label: '배경' },
+];
+
 export default function ShopScreen() {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [points, setPoints] = useState(0);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState<AccessorySlot | 'ALL'>('ALL');
+
+  const visibleItems = useMemo(
+    () => (filter === 'ALL' ? items : items.filter((item) => item.slot === filter)),
+    [items, filter]
+  );
 
   const load = useCallback(async () => {
     try {
@@ -73,8 +86,30 @@ export default function ShopScreen() {
         </View>
       </View>
 
+      <View testID="shop-filter-tabs" style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+        {FILTERS.map((f) => (
+          <TouchableOpacity
+            key={f.key}
+            testID={`shop-filter-${f.key}`}
+            onPress={() => setFilter(f.key)}
+            style={{
+              paddingHorizontal: 15,
+              paddingVertical: 8,
+              borderRadius: 14,
+              backgroundColor: filter === f.key ? colors.ink : colors.card,
+              borderWidth: filter === f.key ? 0 : 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.heading, fontSize: 13, color: filter === f.key ? '#fff' : colors.inkMuted }}>
+              {f.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <View
             key={item.id}
             style={{ width: '47%', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 12, alignItems: 'center', gap: 8 }}

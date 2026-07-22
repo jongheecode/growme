@@ -57,6 +57,19 @@ describe('ShopScreen', () => {
     await waitFor(() => expect(shopApi.equipItem).toHaveBeenCalledWith('i2', true));
   });
 
+  it('filters items by accessory slot', async () => {
+    render(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-filter-HAT')).toBeTruthy());
+    expect(screen.getByText(/동그란 안경/)).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('shop-filter-HAT'));
+    expect(screen.getByText(/리본/)).toBeTruthy();
+    expect(screen.queryByText(/동그란 안경/)).toBeNull();
+
+    fireEvent.press(screen.getByTestId('shop-filter-ALL'));
+    expect(screen.getByText(/동그란 안경/)).toBeTruthy();
+  });
+
   it('shows an error with a retry button on load failure', async () => {
     (shopApi.getShopItems as jest.Mock).mockRejectedValueOnce(new Error('상점 목록을 불러오지 못했어요'));
     render(<ShopScreen />);
