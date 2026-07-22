@@ -7,7 +7,7 @@ async function signup(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
     email,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   return { token: res.body.token as string, userId: JSON.parse(Buffer.from(res.body.token.split('.')[1], 'base64').toString()).userId as string };
 }

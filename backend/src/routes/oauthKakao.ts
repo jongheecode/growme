@@ -2,7 +2,7 @@ import { Router } from 'express';
 import axios from 'axios';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
-import { issueToken, isNonEmptyString } from './auth';
+import { issueToken, isNonEmptyString, uniqueNickname } from './auth';
 import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
@@ -27,16 +27,19 @@ router.post('/kakao', async (req, res) => {
   const account = profileRes.data.kakao_account ?? {};
 
   try {
-    const user = await prisma.user.upsert({
+    const existing = await prisma.user.findUnique({
       where: { oauthProvider_oauthId: { oauthProvider: 'kakao', oauthId: kakaoId } },
-      create: {
-        oauthProvider: 'kakao',
-        oauthId: kakaoId,
-        email: account.email,
-        nickname: account.profile?.nickname ?? '카카오유저',
-      },
-      update: {},
     });
+    const user =
+      existing ??
+      (await prisma.user.create({
+        data: {
+          oauthProvider: 'kakao',
+          oauthId: kakaoId,
+          email: account.email,
+          nickname: await uniqueNickname(account.profile?.nickname ?? '카카오유저'),
+        },
+      }));
     const token = issueToken(user.id);
     res.json({ token, user: { id: user.id, email: user.email, nickname: user.nickname } });
   } catch (err) {

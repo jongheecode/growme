@@ -21,7 +21,7 @@ async function signup(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
     email,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   return res.body.token as string;
 }
@@ -52,6 +52,45 @@ describe('GET /api/goals', () => {
 
   it('requires authentication', async () => {
     const res = await request(app).get('/api/goals');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/goals (manual creation, AI fallback)', () => {
+  it('creates a goal directly without going through the AI chat', async () => {
+    const token = await signup('manualgoal1@example.com');
+    const res = await request(app)
+      .post('/api/goals')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '매일 스트레칭', category: 'EXERCISE' });
+    expect(res.status).toBe(201);
+    expect(res.body.title).toBe('매일 스트레칭');
+    expect(res.body.category).toBe('EXERCISE');
+
+    const stored = await prisma.goal.findUnique({ where: { id: res.body.id } });
+    expect(stored).not.toBeNull();
+  });
+
+  it('rejects a missing title', async () => {
+    const token = await signup('manualgoal2@example.com');
+    const res = await request(app)
+      .post('/api/goals')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ category: 'EXERCISE' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an invalid category', async () => {
+    const token = await signup('manualgoal3@example.com');
+    const res = await request(app)
+      .post('/api/goals')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '목표', category: 'NOT_A_CATEGORY' });
+    expect(res.status).toBe(400);
+  });
+
+  it('requires authentication', async () => {
+    const res = await request(app).post('/api/goals').send({ title: '목표', category: 'ETC' });
     expect(res.status).toBe(401);
   });
 });

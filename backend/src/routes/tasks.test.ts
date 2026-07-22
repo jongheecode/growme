@@ -23,7 +23,7 @@ async function signup(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
     email,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   return res.body.token as string;
 }
@@ -175,7 +175,7 @@ describe('GET /api/tasks', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves reactionText null when Anthropic fails, without breaking the list response', async () => {
+  it('falls back to a preset reaction (not null) when Anthropic fails', async () => {
     mockCreate.mockRejectedValue(new Error('rate limited'));
     const token = await signup('taskfailreact3@example.com');
     const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -194,7 +194,8 @@ describe('GET /api/tasks', () => {
     expect(res.status).toBe(200);
     const found = res.body.find((t: { id: string }) => t.id === overdue.id);
     expect(found.status).toBe('FAILED');
-    expect(found.reactionText).toBeNull();
+    expect(typeof found.reactionText).toBe('string');
+    expect(found.reactionText.length).toBeGreaterThan(0);
   });
 });
 
@@ -322,7 +323,7 @@ describe('PATCH /api/tasks/:id/complete', () => {
     expect(stored?.reactionShownAt).not.toBeNull();
   });
 
-  it('completes successfully with reactionText null when the Anthropic call fails', async () => {
+  it('falls back to a preset reaction (not null) when the Anthropic call fails', async () => {
     mockCreate.mockRejectedValue(new Error('rate limited'));
     const token = await signup('taskreact2@example.com');
     const createRes = await request(app)
@@ -335,7 +336,46 @@ describe('PATCH /api/tasks/:id/complete', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('COMPLETED');
-    expect(res.body.reactionText).toBeNull();
+    expect(typeof res.body.reactionText).toBe('string');
+    expect(res.body.reactionText.length).toBeGreaterThan(0);
+  });
+
+  it('does not apply the timer bonus when there is no focus session', async () => {
+    const token = await signup('taskbonus1@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '타이머 안 씀', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.bonusApplied).toBe(false);
+    expect(res.body.xpValue).toBe(10);
+  });
+
+  it('applies a 20% XP bonus when a focus session meets the category recommended time', async () => {
+    const token = await signup('taskbonus2@example.com');
+    const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '타이머 채움', category: 'STUDY', difficulty: 'EASY', dueChoice: 'THIS_WEEK' });
+    // STUDY 권장 시간은 45분(2700초) — 그 이상 인증된 세션을 만들어둔다.
+    await prisma.session.create({
+      data: { taskId: createRes.body.id, userId: decoded.userId, verifiedSeconds: 2700 },
+    });
+
+    const res = await request(app)
+      .patch(`/api/tasks/${createRes.body.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.bonusApplied).toBe(true);
+    expect(res.body.xpValue).toBe(12); // round(10 * 1.2)
+
+    const profile = await prisma.growthProfile.findUniqueOrThrow({ where: { userId: decoded.userId } });
+    expect(profile.points).toBe(12);
   });
 });
 

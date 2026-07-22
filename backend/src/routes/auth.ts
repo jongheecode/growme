@@ -24,6 +24,15 @@ export function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+// OAuth 신규 가입은 사용자가 닉네임을 직접 고를 방법이 없어서(제공자
+// 프로필 이름을 그대로 씀), 이미 쓰이고 있는 이름이면 조용히 실패하는
+// 대신 짧은 랜덤 접미사를 붙여 유니크하게 만든다.
+export async function uniqueNickname(base: string): Promise<string> {
+  const existing = await prisma.user.findFirst({ where: { nickname: base } });
+  if (!existing) return base;
+  return `${base}${crypto.randomBytes(2).toString('hex')}`;
+}
+
 router.post('/signup', async (req, res) => {
   const { email, password, nickname } = req.body;
   if (!isNonEmptyString(email) || !isNonEmptyString(password) || !isNonEmptyString(nickname)) {
@@ -36,7 +45,7 @@ router.post('/signup', async (req, res) => {
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, passwordHash, nickname },
+      data: { email, passwordHash, nickname: await uniqueNickname(nickname) },
     });
     const token = issueToken(user.id);
     res.status(201).json({ token, user: { id: user.id, email: user.email, nickname: user.nickname } });

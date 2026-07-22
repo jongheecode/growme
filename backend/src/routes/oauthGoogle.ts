@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
-import { issueToken, isNonEmptyString } from './auth';
+import { issueToken, isNonEmptyString, uniqueNickname } from './auth';
 import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
@@ -27,16 +27,19 @@ router.post('/google', async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.upsert({
+    const existing = await prisma.user.findUnique({
       where: { oauthProvider_oauthId: { oauthProvider: 'google', oauthId: payload.sub } },
-      create: {
-        oauthProvider: 'google',
-        oauthId: payload.sub,
-        email: payload.email,
-        nickname: payload.name ?? '구글유저',
-      },
-      update: {},
     });
+    const user =
+      existing ??
+      (await prisma.user.create({
+        data: {
+          oauthProvider: 'google',
+          oauthId: payload.sub,
+          email: payload.email,
+          nickname: await uniqueNickname(payload.name ?? '구글유저'),
+        },
+      }));
     const token = issueToken(user.id);
     res.json({ token, user: { id: user.id, email: user.email, nickname: user.nickname } });
   } catch (err) {

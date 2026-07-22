@@ -6,7 +6,7 @@ async function signupAndGetToken(email: string) {
   const res = await request(app).post('/api/auth/signup').send({
     email,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   return res.body.token as string;
 }

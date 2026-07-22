@@ -135,6 +135,20 @@ router.post('/join', requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
+router.delete('/:id', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const challenge = await prisma.challenge.findUnique({ where: { id: req.params.id } });
+    if (!challenge) return res.status(404).json({ error: 'challenge not found' });
+    if (challenge.createdById !== req.userId) {
+      return res.status(403).json({ error: 'only the creator can delete this challenge' });
+    }
+    await prisma.challenge.delete({ where: { id: challenge.id } });
+    res.status(204).send();
+  } catch {
+    res.status(500).json({ error: 'internal server error' });
+  }
+});
+
 router.delete('/:id/leave', requireAuth, async (req: AuthedRequest, res) => {
   try {
     const challenge = await prisma.challenge.findUnique({ where: { id: req.params.id } });

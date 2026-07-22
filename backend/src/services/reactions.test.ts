@@ -10,7 +10,7 @@ vi.mock('@anthropic-ai/sdk', () => {
   };
 });
 
-import { generateReaction } from './reactions';
+import { generateReaction, pickFallbackReaction } from './reactions';
 
 beforeEach(() => {
   mockCreate.mockReset();
@@ -54,5 +54,23 @@ describe('generateReaction', () => {
   it('propagates an error when the Anthropic call fails', async () => {
     mockCreate.mockRejectedValue(new Error('rate limited'));
     await expect(generateReaction({ title: 'x' }, null, 'FAILED')).rejects.toThrow('rate limited');
+  });
+});
+
+describe('pickFallbackReaction', () => {
+  it('returns a non-empty COMPLETED preset', () => {
+    const text = pickFallbackReaction('COMPLETED', () => 0);
+    expect(text.length).toBeGreaterThan(0);
+  });
+
+  it('returns a non-empty FAILED preset', () => {
+    const text = pickFallbackReaction('FAILED', () => 0.99);
+    expect(text.length).toBeGreaterThan(0);
+  });
+
+  it('picks different presets for different rand values', () => {
+    const first = pickFallbackReaction('COMPLETED', () => 0);
+    const second = pickFallbackReaction('COMPLETED', () => 0.99);
+    expect(first).not.toBe(second);
   });
 });

@@ -150,6 +150,44 @@ describe('POST /api/challenges/join', () => {
   });
 });
 
+describe('DELETE /api/challenges/:id', () => {
+  it('lets the creator delete the challenge', async () => {
+    const a = await signup(`삭제생성자${Date.now()}`);
+    const createRes = await createChallenge(a.token);
+
+    const res = await request(app)
+      .delete(`/api/challenges/${createRes.body.id}`)
+      .set('Authorization', `Bearer ${a.token}`);
+    expect(res.status).toBe(204);
+
+    const stored = await prisma.challenge.findUnique({ where: { id: createRes.body.id } });
+    expect(stored).toBeNull();
+  });
+
+  it('rejects deletion by a non-creator member', async () => {
+    const a = await signup(`삭제비생성자A${Date.now()}`);
+    const b = await signup(`삭제비생성자B${Date.now()}`);
+    const createRes = await createChallenge(a.token);
+    await request(app)
+      .post('/api/challenges/join')
+      .set('Authorization', `Bearer ${b.token}`)
+      .send({ inviteCode: createRes.body.inviteCode });
+
+    const res = await request(app)
+      .delete(`/api/challenges/${createRes.body.id}`)
+      .set('Authorization', `Bearer ${b.token}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 404 for a nonexistent challenge', async () => {
+    const a = await signup(`삭제없음${Date.now()}`);
+    const res = await request(app)
+      .delete('/api/challenges/nonexistent-id')
+      .set('Authorization', `Bearer ${a.token}`);
+    expect(res.status).toBe(404);
+  });
+});
+
 describe('DELETE /api/challenges/:id/leave', () => {
   it('lets a regular member leave', async () => {
     const a = await signup(`탈퇴A${Date.now()}`);

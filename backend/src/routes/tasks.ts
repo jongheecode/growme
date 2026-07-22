@@ -4,7 +4,8 @@ import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { isNonEmptyString } from './auth';
 import { computePersonality } from '../services/growth';
-import { generateReaction } from '../services/reactions';
+import { generateReaction, pickFallbackReaction } from '../services/reactions';
+import { RECOMMENDED_MINUTES, TIMER_BONUS_MULTIPLIER } from '../constants';
 
 const router = Router();
 
@@ -94,14 +95,18 @@ router.get('/', requireAuth, async (req: AuthedRequest, res) => {
     if (needsReaction.length > 0) {
       const personality = await computePersonality(req.userId!);
       for (const t of needsReaction) {
+        let reactionText: string;
         try {
-          const reactionText = await generateReaction(t, personality, 'FAILED');
-          const updated = await prisma.task.update({ where: { id: t.id }, data: { reactionText } });
-          const idx = tasks.findIndex((x) => x.id === t.id);
-          tasks[idx] = updated;
+          reactionText = await generateReaction(t, personality, 'FAILED');
         } catch {
-          // 실패한 건은 reactionText가 계속 null이라 다음 GET에서 자동 재시도된다.
+          // AI 호출 실패(크레딧 소진/장애 등) 시 프리셋 문구로 대체 —
+          // reactionText가 계속 null로 남으면 다음 GET마다 AI를 재호출하게 되므로
+          // 여기서 확정지어 재시도를 멈춘다.
+          reactionText = pickFallbackReaction('FAILED');
         }
+        const updated = await prisma.task.update({ where: { id: t.id }, data: { reactionText } });
+        const idx = tasks.findIndex((x) => x.id === t.id);
+        tasks[idx] = updated;
       }
     }
 
@@ -124,26 +129,39 @@ router.patch('/:id/complete', requireAuth, async (req: AuthedRequest, res) => {
       await prisma.task.update({ where: { id: task.id }, data: { status: 'FAILED' } });
       return res.status(409).json({ error: 'task expired' });
     }
+
+    // 집중 타이머로 카테고리별 권장 시간 이상을 채웠으면 XP 보너스.
+    const sessionAgg = await prisma.session.aggregate({
+      where: { taskId: task.id },
+      _sum: { verifiedSeconds: true },
+    });
+    const focusSeconds = sessionAgg._sum.verifiedSeconds ?? 0;
+    const recommendedSeconds = RECOMMENDED_MINUTES[task.category] * 60;
+    const bonusApplied = focusSeconds >= recommendedSeconds;
+    const xpValue = bonusApplied ? Math.round(task.xpValue * TIMER_BONUS_MULTIPLIER) : task.xpValue;
+
     let updated = await prisma.task.update({
       where: { id: task.id },
-      data: { status: 'COMPLETED', completedAt: new Date() },
+      data: { status: 'COMPLETED', completedAt: new Date(), xpValue },
     });
     await prisma.growthProfile.upsert({
       where: { userId: req.userId! },
-      create: { userId: req.userId!, points: task.xpValue },
-      update: { points: { increment: task.xpValue } },
+      create: { userId: req.userId!, points: xpValue },
+      update: { points: { increment: xpValue } },
     });
+    let reactionText: string;
     try {
       const personality = await computePersonality(req.userId!);
-      const reactionText = await generateReaction(updated, personality, 'COMPLETED');
-      updated = await prisma.task.update({
-        where: { id: task.id },
-        data: { reactionText, reactionShownAt: new Date() },
-      });
+      reactionText = await generateReaction(updated, personality, 'COMPLETED');
     } catch {
-      // 리액션 생성은 best-effort — 실패해도 완료 처리 자체는 이미 끝난 상태.
+      // AI 호출 실패 시에도 완료 처리 자체와 리액션 표시는 끊기지 않도록 프리셋으로 대체.
+      reactionText = pickFallbackReaction('COMPLETED');
     }
-    res.json(updated);
+    updated = await prisma.task.update({
+      where: { id: task.id },
+      data: { reactionText, reactionShownAt: new Date() },
+    });
+    res.json({ ...updated, bonusApplied });
   } catch {
     res.status(500).json({ error: 'internal server error' });
   }

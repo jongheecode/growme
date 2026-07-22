@@ -7,7 +7,7 @@ async function setupUserAndActivity() {
   const signupRes = await request(app).post('/api/auth/signup').send({
     email: `s${Date.now()}@example.com`,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   const token = signupRes.body.token;
   const activityRes = await request(app)
@@ -21,7 +21,7 @@ async function setupUserAndTask() {
   const signupRes = await request(app).post('/api/auth/signup').send({
     email: `st${Date.now()}@example.com`,
     password: 'password123',
-    nickname: '테스터',
+    nickname: `테스터${Math.random().toString(36).slice(2, 8)}`,
   });
   const token = signupRes.body.token;
   const taskRes = await request(app)

@@ -3,6 +3,32 @@ import { Personality } from './growth';
 
 const OUTCOME_LABEL = { COMPLETED: '완료', FAILED: '실패' } as const;
 
+// AI 호출이 실패했을 때(크레딧 소진, API 장애 등) 완료/실패 반응을
+// 아예 못 보여주는 대신 쓰는 프리셋 문구 풀. AI가 복구되면 이후
+// 요청부터는 다시 실시간 생성된 문구가 쓰인다.
+const FALLBACK_REACTIONS: Record<'COMPLETED' | 'FAILED', string[]> = {
+  COMPLETED: [
+    '잘했어! 오늘도 한 걸음 나아갔어',
+    '멋지다, 꾸준히 하고 있어!',
+    '해냈구나, 정말 대견해',
+    '오늘도 완료! 이 기세 좋아',
+  ],
+  FAILED: [
+    '괜찮아, 다음에 다시 해보자',
+    '이런 날도 있는 거지, 너무 자책하지 마',
+    '다음 기회에 잘 해보자, 응원할게',
+    '한 번 놓쳤다고 멈추는 건 아니야',
+  ],
+};
+
+export function pickFallbackReaction(
+  outcome: 'COMPLETED' | 'FAILED',
+  rand: () => number = Math.random
+): string {
+  const pool = FALLBACK_REACTIONS[outcome];
+  return pool[Math.floor(rand() * pool.length)];
+}
+
 function personalityDescription(personality: Personality | null): string {
   if (!personality) {
     return '아직 사용자의 성격 유형을 알 수 없어. 중립적인 톤으로 반응해줘.';
