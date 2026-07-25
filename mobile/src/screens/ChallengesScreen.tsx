@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MyChallenge, createChallenge, joinChallenge, listMyChallenges } from '../api/challenges';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'Challenges'>;
@@ -22,6 +23,7 @@ const inputStyle = {
 };
 
 export default function ChallengesScreen() {
+  const resolveError = useErrorMessage();
   const navigation = useNavigation<Nav>();
   const [challenges, setChallenges] = useState<MyChallenge[]>([]);
   const [name, setName] = useState('');
@@ -36,9 +38,9 @@ export default function ChallengesScreen() {
       const result = await listMyChallenges();
       setChallenges(result);
     } catch {
-      setError('챌린지 목록을 불러오지 못했어요');
+      setError(resolveError('챌린지 목록을 불러오지 못했어요'));
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     load();
@@ -55,7 +57,7 @@ export default function ChallengesScreen() {
       setTargetXp('');
       await load();
     } catch {
-      setError('챌린지를 만들지 못했어요');
+      setError(resolveError('챌린지를 만들지 못했어요'));
     }
   }
 
@@ -66,7 +68,7 @@ export default function ChallengesScreen() {
       setInviteCode('');
       await load();
     } catch {
-      setError('챌린지에 참여하지 못했어요');
+      setError(resolveError('챌린지에 참여하지 못했어요'));
     }
   }
 

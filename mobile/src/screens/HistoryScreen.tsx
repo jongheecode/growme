@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HistoryEntry, getTaskHistory } from '../api/history';
 import KkumiView from '../components/KkumiView';
 import Icon from '../components/Icon';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts, categoryMeta, difficultyLabel } from '../theme';
 
 function formatFocus(totalSeconds: number): string {
@@ -18,6 +19,7 @@ function formatDate(iso: string): string {
 }
 
 export default function HistoryScreen() {
+  const resolveError = useErrorMessage();
   const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
   const [error, setError] = useState('');
 
@@ -27,9 +29,9 @@ export default function HistoryScreen() {
       const result = await getTaskHistory();
       setEntries(result);
     } catch {
-      setError('히스토리를 불러오지 못했어요');
+      setError(resolveError('히스토리를 불러오지 못했어요'));
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     load();

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AccessorySlot, ShopItem, equipItem, getShopItems, purchaseItem } from '../api/shop';
 import { getGrowth } from '../api/growth';
 import KkumiView from '../components/KkumiView';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 const BG_PREVIEW_COLOR: Record<string, string> = {
@@ -19,6 +20,7 @@ const FILTERS: { key: AccessorySlot | 'ALL'; label: string }[] = [
 ];
 
 export default function ShopScreen() {
+  const resolveError = useErrorMessage();
   const [items, setItems] = useState<ShopItem[]>([]);
   const [points, setPoints] = useState(0);
   const [error, setError] = useState('');
@@ -36,9 +38,9 @@ export default function ShopScreen() {
       setItems(itemList);
       setPoints(growth.points);
     } catch {
-      setError('상점 정보를 불러오지 못했어요');
+      setError(resolveError('상점 정보를 불러오지 못했어요'));
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     load();
@@ -49,7 +51,7 @@ export default function ShopScreen() {
       await purchaseItem(itemId);
       await load();
     } catch {
-      setError('구매하지 못했어요');
+      setError(resolveError('구매하지 못했어요'));
     }
   }
 
@@ -58,7 +60,7 @@ export default function ShopScreen() {
       await equipItem(itemId, true);
       await load();
     } catch {
-      setError('장착하지 못했어요');
+      setError(resolveError('장착하지 못했어요'));
     }
   }
 

@@ -5,12 +5,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChallengeDetail, getChallenge, leaveChallenge, deleteChallenge } from '../api/challenges';
 import { Me, getMe } from '../api/users';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 type Route = RouteProp<ProfileStackParamList, 'ChallengeDetail'>;
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ChallengeDetail'>;
 
 export default function ChallengeDetailScreen() {
+  const resolveError = useErrorMessage();
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const { challengeId } = route.params;
@@ -25,9 +27,9 @@ export default function ChallengeDetailScreen() {
       setDetail(detailResult);
       setMe(meResult);
     } catch {
-      setError('챌린지 정보를 불러오지 못했어요');
+      setError(resolveError('챌린지 정보를 불러오지 못했어요'));
     }
-  }, [challengeId]);
+  }, [challengeId, resolveError]);
 
   useEffect(() => {
     load();
@@ -37,7 +39,7 @@ export default function ChallengeDetailScreen() {
     try {
       await leaveChallenge(challengeId);
     } catch {
-      setError('챌린지에서 나가지 못했어요');
+      setError(resolveError('챌린지에서 나가지 못했어요'));
     }
   }
 
@@ -46,7 +48,7 @@ export default function ChallengeDetailScreen() {
       await deleteChallenge(challengeId);
       navigation.goBack();
     } catch {
-      setError('챌린지를 삭제하지 못했어요');
+      setError(resolveError('챌린지를 삭제하지 못했어요'));
     }
   }
 

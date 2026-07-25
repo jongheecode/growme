@@ -3,6 +3,7 @@ import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'reac
 import { changePassword } from '../api/auth';
 import { getMe, updateEmail, deleteAccount } from '../api/users';
 import { useAuth } from '../context/AuthContext';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 const fieldStyle = {
@@ -17,6 +18,7 @@ const fieldStyle = {
 };
 
 export default function AccountSettingsScreen() {
+  const resolveError = useErrorMessage();
   const { logout } = useAuth();
   const [email, setEmail] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
@@ -42,7 +44,7 @@ export default function AccountSettingsScreen() {
       await updateEmail(email.trim());
       setEmailMessage('이메일이 변경됐어요');
     } catch (err) {
-      setEmailError(err instanceof Error ? err.message : '이메일을 변경하지 못했어요');
+      setEmailError(resolveError(err instanceof Error ? err.message : '이메일을 변경하지 못했어요'));
     }
   }
 
@@ -55,7 +57,7 @@ export default function AccountSettingsScreen() {
       setCurrentPassword('');
       setNewPassword('');
     } catch {
-      setPasswordError('현재 비밀번호를 확인해주세요');
+      setPasswordError(resolveError('현재 비밀번호를 확인해주세요'));
     }
   }
 
@@ -65,7 +67,7 @@ export default function AccountSettingsScreen() {
       await deleteAccount();
       await logout();
     } catch {
-      setDeleteError('회원 탈퇴에 실패했어요');
+      setDeleteError(resolveError('회원 탈퇴에 실패했어요'));
     }
   }
 

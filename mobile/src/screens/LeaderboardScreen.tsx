@@ -3,6 +3,7 @@ import { Alert, AlertButton, View, Text, TouchableOpacity, ScrollView } from 're
 import { LeaderboardEntry, LeaderboardRange, LeaderboardScope, getLeaderboard } from '../api/leaderboard';
 import { getMe } from '../api/users';
 import { blockUser, reportUser } from '../api/safety';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 const REPORT_REASONS = ['스팸', '부적절한 콘텐츠', '괴롭힘', '기타'];
@@ -18,6 +19,7 @@ function toggleStyle(active: boolean) {
 }
 
 export default function LeaderboardScreen() {
+  const resolveError = useErrorMessage();
   const [scope, setScope] = useState<LeaderboardScope>('global');
   const [range, setRange] = useState<LeaderboardRange>('alltime');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -30,9 +32,9 @@ export default function LeaderboardScreen() {
       const result = await getLeaderboard(s, r);
       setEntries(result);
     } catch {
-      setError('랭킹을 불러오지 못했어요');
+      setError(resolveError('랭킹을 불러오지 못했어요'));
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     load(scope, range);
@@ -49,7 +51,7 @@ export default function LeaderboardScreen() {
       await blockUser(entry.userId);
       await load(scope, range);
     } catch {
-      setError('차단하지 못했어요');
+      setError(resolveError('차단하지 못했어요'));
     }
   }
 
@@ -57,7 +59,7 @@ export default function LeaderboardScreen() {
     try {
       await reportUser(entry.userId, reason);
     } catch {
-      setError('신고를 접수하지 못했어요');
+      setError(resolveError('신고를 접수하지 못했어요'));
     }
   }
 

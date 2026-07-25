@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { forgotPassword, resetPassword } from '../api/auth';
 import { AuthStackParamList } from '../navigation/AuthStack';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
@@ -21,6 +22,7 @@ const fieldStyle = {
 };
 
 export default function ForgotPasswordScreen() {
+  const resolveError = useErrorMessage();
   const navigation = useNavigation<Nav>();
   const [email, setEmail] = useState('');
   const [requested, setRequested] = useState(false);
@@ -37,7 +39,7 @@ export default function ForgotPasswordScreen() {
       setMessage('해당 이메일 계정이 있다면 재설정 링크를 보냈어요');
       setRequested(true);
     } catch {
-      setError('요청을 처리하지 못했어요');
+      setError(resolveError('요청을 처리하지 못했어요'));
     }
   }
 
@@ -47,7 +49,7 @@ export default function ForgotPasswordScreen() {
       await resetPassword(token.trim(), newPassword);
       setDone(true);
     } catch {
-      setError('토큰이 올바르지 않거나 만료됐어요');
+      setError(resolveError('토큰이 올바르지 않거나 만료됐어요'));
     }
   }
 

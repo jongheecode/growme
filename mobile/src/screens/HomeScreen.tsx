@@ -6,6 +6,7 @@ import { GrowthState, Species, getGrowth } from '../api/growth';
 import { EquippedAccessory, getMyAccessories } from '../api/shop';
 import { TaskSuggestion, suggestTasks } from '../api/goals';
 import { syncMissionReminder } from '../notifications';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
 import KkumiInfoModal from '../components/KkumiInfoModal';
@@ -32,6 +33,7 @@ interface ReactionInfo {
 }
 
 export default function HomeScreen() {
+  const resolveError = useErrorMessage();
   const { goals, activeGoalId, setActiveGoalId } = useGoals();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoaded, setTasksLoaded] = useState(false);
@@ -63,12 +65,12 @@ export default function HomeScreen() {
       syncMissionReminder(hasPendingToday).catch(() => {});
       return growthState;
     } catch {
-      setError('불러오지 못했어요');
+      setError(resolveError('불러오지 못했어요'));
       return null;
     } finally {
       setTasksLoaded(true);
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     refresh();
@@ -81,11 +83,11 @@ export default function HomeScreen() {
       const result = await suggestTasks(activeGoalId);
       setSuggestions(result);
     } catch {
-      setError('지금은 추천을 가져올 수 없어요, 다시 시도해주세요');
+      setError(resolveError('지금은 추천을 가져올 수 없어요, 다시 시도해주세요'));
     } finally {
       setSuggestionsLoading(false);
     }
-  }, [activeGoalId]);
+  }, [activeGoalId, resolveError]);
 
   useEffect(() => {
     if (!tasksLoaded || !activeGoalId) return;
@@ -108,7 +110,7 @@ export default function HomeScreen() {
       xpValue = completed.xpValue;
       bonusApplied = completed.bonusApplied;
     } catch (err) {
-      failureMessage = err instanceof Error ? err.message : '할일을 완료하지 못했어요';
+      failureMessage = resolveError(err instanceof Error ? err.message : '할일을 완료하지 못했어요');
     }
     // refresh() runs regardless of outcome so an expired task's auto-fail (flipped
     // server-side on the next GET /api/tasks) shows up immediately; refresh() clears
@@ -138,7 +140,7 @@ export default function HomeScreen() {
       await createTask(title, category, difficulty, dueChoice, activeGoalId ?? undefined);
       await refresh();
     } catch {
-      setError('할일을 추가하지 못했어요');
+      setError(resolveError('할일을 추가하지 못했어요'));
     }
   }
 
@@ -148,7 +150,7 @@ export default function HomeScreen() {
       await createTask(s.title, s.category, s.difficulty, s.dueChoice, activeGoalId ?? undefined);
       await refresh();
     } catch {
-      setError('할일을 추가하지 못했어요');
+      setError(resolveError('할일을 추가하지 못했어요'));
     }
   }
 

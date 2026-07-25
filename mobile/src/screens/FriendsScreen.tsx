@@ -11,12 +11,14 @@ import {
 import { blockUser, reportUser } from '../api/safety';
 import KkumiView from '../components/KkumiView';
 import Icon from '../components/Icon';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts } from '../theme';
 
 const STAGE_LABEL = ['알', '부화', '새싹', '자람', '만개'];
 const REPORT_REASONS = ['스팸', '부적절한 콘텐츠', '괴롭힘', '기타'];
 
 export default function FriendsScreen() {
+  const resolveError = useErrorMessage();
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [nickname, setNickname] = useState('');
@@ -29,9 +31,9 @@ export default function FriendsScreen() {
       setRequests(requestList);
       setFriends(friendList);
     } catch {
-      setError('친구 정보를 불러오지 못했어요');
+      setError(resolveError('친구 정보를 불러오지 못했어요'));
     }
-  }, []);
+  }, [resolveError]);
 
   useEffect(() => {
     load();
@@ -44,7 +46,7 @@ export default function FriendsScreen() {
       setNickname('');
       await load();
     } catch {
-      setError('친구 요청을 보내지 못했어요');
+      setError(resolveError('친구 요청을 보내지 못했어요'));
     }
   }
 
@@ -53,7 +55,7 @@ export default function FriendsScreen() {
       await acceptFriendRequest(id);
       await load();
     } catch {
-      setError('요청을 수락하지 못했어요');
+      setError(resolveError('요청을 수락하지 못했어요'));
     }
   }
 
@@ -62,7 +64,7 @@ export default function FriendsScreen() {
       await blockUser(friend.id);
       await load();
     } catch {
-      setError('차단하지 못했어요');
+      setError(resolveError('차단하지 못했어요'));
     }
   }
 
@@ -70,7 +72,7 @@ export default function FriendsScreen() {
     try {
       await reportUser(friend.id, reason);
     } catch {
-      setError('신고를 접수하지 못했어요');
+      setError(resolveError('신고를 접수하지 못했어요'));
     }
   }
 

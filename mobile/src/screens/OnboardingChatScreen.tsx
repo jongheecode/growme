@@ -5,6 +5,7 @@ import { sendGoalChatMessage, createGoal, ChatMessage } from '../api/goals';
 import { Category } from '../api/tasks';
 import { useGoals } from '../context/GoalsContext';
 import KkumiView from '../components/KkumiView';
+import { useErrorMessage } from '../hooks/useErrorMessage';
 import { colors, fonts, categoryMeta } from '../theme';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 const CATEGORIES: Category[] = ['EXERCISE', 'STUDY', 'READING', 'ETC'];
 
 export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
+  const resolveError = useErrorMessage();
   const { refreshGoals } = useGoals();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -36,7 +38,7 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
         setGoalConfirmed(result.goal.title);
       }
     } catch {
-      setError('메시지를 보내지 못했어요');
+      setError(resolveError('메시지를 보내지 못했어요'));
     } finally {
       setSending(false);
     }
@@ -62,7 +64,7 @@ export default function OnboardingChatScreen({ canCancel, onDone }: Props) {
       const goal = await createGoal(manualTitle.trim(), manualCategory);
       setGoalConfirmed(goal.title);
     } catch {
-      setManualError('목표를 만들지 못했어요');
+      setManualError(resolveError('목표를 만들지 못했어요'));
     }
   }
 
