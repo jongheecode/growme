@@ -46,11 +46,11 @@ describe('KkumiInfoModal', () => {
 
   it('shows the current streak', () => {
     render(<KkumiInfoModal visible onClose={() => {}} growth={{ ...grownGrowth, streak: { currentStreak: 4, longestStreak: 4 } }} />);
-    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('4일');
+    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('4일', { exact: false });
   });
 
   it('shows the longest streak footnote when it exceeds the current streak', () => {
     render(<KkumiInfoModal visible onClose={() => {}} growth={{ ...grownGrowth, streak: { currentStreak: 1, longestStreak: 7 } }} />);
-    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('최고 7일');
+    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('최고 7일', { exact: false });
   });
 });

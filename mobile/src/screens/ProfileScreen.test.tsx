@@ -19,6 +19,12 @@ jest.mock('../api/users', () => ({
   ),
 }));
 
+jest.mock('../api/growth', () => ({
+  getGrowth: jest.fn(() => Promise.resolve({ personality: null })),
+}));
+
+import { getGrowth } from '../api/growth';
+
 jest.mock('../notifications', () => ({
   isReminderEnabled: jest.fn(() => Promise.resolve(false)),
   setReminderEnabled: jest.fn(() => Promise.resolve(true)),
@@ -66,6 +72,19 @@ describe('ProfileScreen', () => {
     renderProfile();
     await waitFor(() => expect(screen.getByTestId('profile-nickname')).toHaveTextContent('종이'));
     expect(screen.getByTestId('profile-goal-count')).toHaveTextContent('2');
+  });
+
+  it('shows "성격 파악 중..." before enough history exists', async () => {
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('profile-personality-value')).toHaveTextContent('성격 파악 중...'));
+  });
+
+  it('shows the personality type name and description once computed', async () => {
+    (getGrowth as jest.Mock).mockResolvedValueOnce({
+      personality: { axisA: 'STEADY', axisB: 'EASYGOING', type: 'STEADY_EASYGOING' },
+    });
+    renderProfile();
+    await waitFor(() => expect(screen.getByTestId('profile-personality-value')).toHaveTextContent('산책가형'));
   });
 
   it('turns the mission reminder on', async () => {

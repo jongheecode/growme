@@ -6,9 +6,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { useGoals } from '../context/GoalsContext';
 import { getMe, Me } from '../api/users';
+import { getGrowth } from '../api/growth';
 import { isReminderEnabled, setReminderEnabled } from '../notifications';
 import { ProfileStackParamList } from '../navigation/ProfileStack';
 import Icon, { IconName } from '../components/Icon';
+import { PERSONALITY_INFO } from '../personality';
 import { colors, fonts } from '../theme';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
@@ -29,12 +31,16 @@ export default function ProfileScreen() {
   const { startAddGoal, goals } = useGoals();
   const navigation = useNavigation<Nav>();
   const [me, setMe] = useState<Me | null>(null);
+  const [personalityType, setPersonalityType] = useState<keyof typeof PERSONALITY_INFO | null>(null);
   const [reminderOn, setReminderOn] = useState(false);
   const [reminderError, setReminderError] = useState('');
 
   useEffect(() => {
     getMe()
       .then(setMe)
+      .catch(() => {});
+    getGrowth()
+      .then((g) => setPersonalityType(g.personality?.type ?? null))
       .catch(() => {});
     isReminderEnabled().then(setReminderOn);
   }, []);
@@ -80,6 +86,25 @@ export default function ProfileScreen() {
           </Text>
           <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.inkMuted }}>목표</Text>
         </View>
+      </View>
+      <View
+        testID="profile-personality-card"
+        style={{
+          backgroundColor: '#EFE8F7',
+          borderRadius: 18,
+          padding: 14,
+          marginBottom: 14,
+        }}
+      >
+        <Text style={{ fontFamily: fonts.body, fontSize: 11, color: '#7A63B8', marginBottom: 3 }}>내 꾸미 성격 유형</Text>
+        <Text testID="profile-personality-value" style={{ fontFamily: fonts.heading, fontSize: 15, color: colors.ink }}>
+          {personalityType ? PERSONALITY_INFO[personalityType].name : '성격 파악 중...'}
+        </Text>
+        {personalityType ? (
+          <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkMuted, marginTop: 2 }}>
+            {PERSONALITY_INFO[personalityType].desc}
+          </Text>
+        ) : null}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {MENU.map((m) => (

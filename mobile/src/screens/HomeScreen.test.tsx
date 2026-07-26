@@ -239,7 +239,7 @@ describe('HomeScreen', () => {
       streak: { currentStreak: 3, longestStreak: 5 },
     });
     render(<HomeScreen />);
-    await waitFor(() => expect(screen.getByTestId('streak-badge')).toHaveTextContent('3일 연속'));
+    await waitFor(() => expect(screen.getByTestId('streak-badge')).toHaveTextContent('3일 연속', { exact: false }));
   });
 
   it('passes equipped accessories to the kkumi view', async () => {
