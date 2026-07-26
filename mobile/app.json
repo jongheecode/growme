@@ -44,7 +44,11 @@
     "extra": {
       "apiBase": "http://192.168.1.100:4000",
       "googleClientId": "",
-      "kakaoClientId": ""
-    }
+      "kakaoClientId": "",
+      "eas": {
+        "projectId": "325c701d-285c-40ec-859d-fa3313dcc039"
+      }
+    },
+    "owner": "jongheecode"
   }
 }
