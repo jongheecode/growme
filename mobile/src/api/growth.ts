@@ -13,6 +13,11 @@ export interface Personality {
   type: PersonalityType;
 }
 
+export interface Streak {
+  currentStreak: number;
+  longestStreak: number;
+}
+
 export interface GrowthState {
   totalXp: number;
   species: Species | null;
@@ -21,6 +26,7 @@ export interface GrowthState {
   xpToNextStage: number | null;
   personality: Personality | null;
   points: number;
+  streak: Streak;
 }
 
 export async function getGrowth(): Promise<GrowthState> {

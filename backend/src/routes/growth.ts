@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../db';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import { getTotalXp, ensureHatched, getGrowthStageInfo, computePersonality } from '../services/growth';
+import { getTotalXp, ensureHatched, getGrowthStageInfo, computePersonality, computeStreak } from '../services/growth';
 
 const router = Router();
 
@@ -10,6 +10,7 @@ router.get('/me', requireAuth, async (req: AuthedRequest, res) => {
     const totalXp = await getTotalXp(req.userId!);
     const species = await ensureHatched(req.userId!, totalXp);
     const personality = await computePersonality(req.userId!);
+    const streak = await computeStreak(req.userId!);
     const profile = await prisma.growthProfile.findUnique({ where: { userId: req.userId! } });
     const points = profile?.points ?? 0;
 
@@ -22,11 +23,12 @@ router.get('/me', requireAuth, async (req: AuthedRequest, res) => {
         xpToNextStage: null,
         personality,
         points,
+        streak,
       });
     }
 
     const { stage, xpIntoStage, xpToNextStage } = getGrowthStageInfo(species, totalXp);
-    res.json({ totalXp, species, stage, xpIntoStage, xpToNextStage, personality, points });
+    res.json({ totalXp, species, stage, xpIntoStage, xpToNextStage, personality, points, streak });
   } catch {
     res.status(500).json({ error: 'internal server error' });
   }

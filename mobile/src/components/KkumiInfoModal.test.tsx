@@ -10,6 +10,7 @@ const eggGrowth: GrowthState = {
   xpToNextStage: null,
   personality: null,
   points: 0,
+  streak: { currentStreak: 0, longestStreak: 0 },
 };
 
 const grownGrowth: GrowthState = {
@@ -20,6 +21,7 @@ const grownGrowth: GrowthState = {
   xpToNextStage: 100,
   personality: { axisA: 'STEADY', axisB: 'EASYGOING', type: 'STEADY_EASYGOING' },
   points: 0,
+  streak: { currentStreak: 0, longestStreak: 0 },
 };
 
 describe('KkumiInfoModal', () => {
@@ -40,5 +42,15 @@ describe('KkumiInfoModal', () => {
     render(<KkumiInfoModal visible onClose={onClose} growth={grownGrowth} />);
     fireEvent.press(screen.getByTestId('kkumi-modal-close'));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows the current streak', () => {
+    render(<KkumiInfoModal visible onClose={() => {}} growth={{ ...grownGrowth, streak: { currentStreak: 4, longestStreak: 4 } }} />);
+    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('4일');
+  });
+
+  it('shows the longest streak footnote when it exceeds the current streak', () => {
+    render(<KkumiInfoModal visible onClose={() => {}} growth={{ ...grownGrowth, streak: { currentStreak: 1, longestStreak: 7 } }} />);
+    expect(screen.getByTestId('kkumi-streak-stat')).toHaveTextContent('최고 7일');
   });
 });

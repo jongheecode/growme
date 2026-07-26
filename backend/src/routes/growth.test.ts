@@ -73,4 +73,23 @@ describe('GET /api/growth/me', () => {
     const res = await request(app).get('/api/growth/me').set('Authorization', `Bearer ${token}`);
     expect(res.body.points).toBe(20);
   });
+
+  it('includes a streak of 0/0 for a brand new user', async () => {
+    const { token } = await signup('growthme_streak1@example.com');
+    const res = await request(app).get('/api/growth/me').set('Authorization', `Bearer ${token}`);
+    expect(res.body.streak).toEqual({ currentStreak: 0, longestStreak: 0 });
+  });
+
+  it('reflects a streak of 1 after completing a task today', async () => {
+    const { token } = await signup('growthme_streak2@example.com');
+    const createRes = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '스트릭 확인', category: 'ETC', difficulty: 'EASY', dueChoice: 'TODAY' });
+    await request(app).patch(`/api/tasks/${createRes.body.id}/complete`).set('Authorization', `Bearer ${token}`);
+
+    const res = await request(app).get('/api/growth/me').set('Authorization', `Bearer ${token}`);
+    expect(res.body.streak.currentStreak).toBe(1);
+    expect(res.body.streak.longestStreak).toBe(1);
+  });
 });

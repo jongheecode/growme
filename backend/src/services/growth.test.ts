@@ -5,6 +5,7 @@ import {
   ensureHatched,
   getGrowthStageInfo,
   computePersonality,
+  computeStreak,
   SPECIES_STAGE_THRESHOLDS,
 } from './growth';
 
@@ -138,5 +139,67 @@ describe('computePersonality', () => {
     }
     const result = await computePersonality(user.id);
     expect(result?.axisB).toBe('LASTMINUTE');
+  });
+});
+
+describe('computeStreak', () => {
+  async function completeOn(userId: string, day: Date, title: string) {
+    await prisma.task.create({
+      data: {
+        userId,
+        title,
+        category: 'ETC',
+        difficulty: 'EASY',
+        xpValue: 10,
+        status: 'COMPLETED',
+        dueAt: day,
+        completedAt: day,
+      },
+    });
+  }
+
+  it('returns 0/0 when there are no completed tasks', async () => {
+    const user = await makeUser('streak1@example.com');
+    expect(await computeStreak(user.id)).toEqual({ currentStreak: 0, longestStreak: 0 });
+  });
+
+  it('counts consecutive days ending today', async () => {
+    const user = await makeUser('streak2@example.com');
+    const now = new Date();
+    await completeOn(user.id, now, 'today');
+    await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1), 'yesterday');
+    await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2), 'day-before');
+    const result = await computeStreak(user.id, now);
+    expect(result.currentStreak).toBe(3);
+  });
+
+  it('keeps the streak alive if the last completion was yesterday (today not yet acted on)', async () => {
+    const user = await makeUser('streak3@example.com');
+    const now = new Date();
+    await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1), 'yesterday');
+    await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2), 'day-before');
+    const result = await computeStreak(user.id, now);
+    expect(result.currentStreak).toBe(2);
+  });
+
+  it('resets to 0 after a gap of 2+ days with no completion', async () => {
+    const user = await makeUser('streak4@example.com');
+    const now = new Date();
+    await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3), 'old');
+    const result = await computeStreak(user.id, now);
+    expect(result.currentStreak).toBe(0);
+  });
+
+  it('remembers the longest streak even after the current streak resets', async () => {
+    const user = await makeUser('streak5@example.com');
+    const now = new Date();
+    // 5-day run far in the past, then a break, then today only
+    for (let i = 20; i <= 24; i++) {
+      await completeOn(user.id, new Date(now.getFullYear(), now.getMonth(), now.getDate() - i), `past${i}`);
+    }
+    await completeOn(user.id, now, 'today');
+    const result = await computeStreak(user.id, now);
+    expect(result.currentStreak).toBe(1);
+    expect(result.longestStreak).toBe(5);
   });
 });

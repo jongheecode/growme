@@ -2,7 +2,16 @@ import { getGrowth } from './growth';
 
 describe('getGrowth', () => {
   it('returns the parsed growth state', async () => {
-    const body = { totalXp: 10, species: null, stage: 0, xpIntoStage: 0, xpToNextStage: null, personality: null };
+    const body = {
+      totalXp: 10,
+      species: null,
+      stage: 0,
+      xpIntoStage: 0,
+      xpToNextStage: null,
+      personality: null,
+      points: 0,
+      streak: { currentStreak: 0, longestStreak: 0 },
+    };
     globalThis.fetch = jest.fn(() => Promise.resolve({ ok: true, json: async () => body })) as unknown as typeof fetch;
     const growth = await getGrowth();
     expect(growth).toEqual(body);

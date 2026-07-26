@@ -24,6 +24,7 @@ beforeEach(() => {
     xpToNextStage: 100,
     personality: null,
     points: 100,
+    streak: { currentStreak: 0, longestStreak: 0 },
   });
 });
 

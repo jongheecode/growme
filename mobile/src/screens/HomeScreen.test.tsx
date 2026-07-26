@@ -25,6 +25,7 @@ const growthState: growthApi.GrowthState = {
   xpToNextStage: 100,
   personality: null,
   points: 0,
+  streak: { currentStreak: 0, longestStreak: 0 },
 };
 
 const taskInGoalA: tasksApi.Task = {
@@ -224,6 +225,21 @@ describe('HomeScreen', () => {
   it('shows the current point balance', async () => {
     render(<HomeScreen />);
     await waitFor(() => expect(screen.getByTestId('points-badge')).toHaveTextContent('0 P'));
+  });
+
+  it('hides the streak badge when currentStreak is 0', async () => {
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('points-badge')).toBeTruthy());
+    expect(screen.queryByTestId('streak-badge')).toBeNull();
+  });
+
+  it('shows the streak badge when currentStreak is above 0', async () => {
+    (growthApi.getGrowth as jest.Mock).mockResolvedValue({
+      ...growthState,
+      streak: { currentStreak: 3, longestStreak: 5 },
+    });
+    render(<HomeScreen />);
+    await waitFor(() => expect(screen.getByTestId('streak-badge')).toHaveTextContent('3일 연속'));
   });
 
   it('passes equipped accessories to the kkumi view', async () => {

@@ -70,10 +70,17 @@ export default function KkumiInfoModal({ visible, onClose, growth }: Props) {
             />
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 18 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>
             <StatCard label="단계" value={STAGE_LABEL[growth.stage]} color={colors.green} />
             <StatCard label="누적 XP" value={growth.totalXp} color={colors.goldText} />
             <StatCard label="포인트" value={growth.points} color={colors.peach} />
+            <View testID="kkumi-streak-stat" style={{ flex: 1, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 14, alignItems: 'center' }}>
+              <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.fail }}>{`${growth.streak.currentStreak}일`}</Text>
+              <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.inkMuted, marginTop: 2 }}>연속 완료</Text>
+              {growth.streak.longestStreak > growth.streak.currentStreak ? (
+                <Text style={{ fontFamily: fonts.body, fontSize: 9, color: colors.inkFaint, marginTop: 1 }}>{`최고 ${growth.streak.longestStreak}일`}</Text>
+              ) : null}
+            </View>
           </View>
 
           <Text style={{ fontFamily: fonts.heading, fontSize: 16, color: colors.ink, marginBottom: 6 }}>성격 유형</Text>

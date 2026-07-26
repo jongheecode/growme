@@ -214,6 +214,23 @@ export default function HomeScreen() {
             >
               <Text style={{ fontFamily: fonts.heading, fontSize: 13, color: colors.goldText }}>{`${growth.points} P`}</Text>
             </View>
+            {growth.streak.currentStreak > 0 ? (
+              <View
+                testID="streak-badge"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  backgroundColor: '#FBEAE3',
+                  paddingHorizontal: 11,
+                  paddingVertical: 3,
+                  borderRadius: 14,
+                  marginBottom: 10,
+                }}
+              >
+                <Text style={{ fontFamily: fonts.heading, fontSize: 13, color: colors.fail }}>{`🔥 ${growth.streak.currentStreak}일 연속`}</Text>
+              </View>
+            ) : null}
             <TouchableOpacity testID="kkumi-tap-target" onPress={() => setModalVisible(true)}>
               <KkumiView species={growth.species} stage={growth.stage} accessories={accessories} />
             </TouchableOpacity>
