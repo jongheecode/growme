@@ -1,3 +1,7 @@
+import { initSentry } from './services/sentry';
+
+initSentry();
+
 import app from './app';
 import { registerCronJobs } from './cron';
 

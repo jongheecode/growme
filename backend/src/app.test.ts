@@ -9,3 +9,14 @@ describe('GET /api/health', () => {
     expect(res.body).toEqual({ status: 'ok' });
   });
 });
+
+describe('error-handling middleware', () => {
+  it('returns 500 instead of crashing when a middleware-level error occurs (e.g. malformed JSON)', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{not valid json');
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: 'internal server error' });
+  });
+});

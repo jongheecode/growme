@@ -15,6 +15,7 @@ import leaderboardRouter from './routes/leaderboard';
 import challengesRouter from './routes/challenges';
 import shopRouter from './routes/shop';
 import safetyRouter from './routes/safety';
+import { captureError } from './services/sentry';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean);
 
@@ -53,6 +54,15 @@ app.use('/api/safety', safetyRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
+});
+
+// 각 라우트는 자체 try/catch로 500을 직접 응답하므로 이 핸들러까지
+// 오는 건 미들웨어 단계에서 난 예외(JSON 파싱 오류 등) 정도지만,
+// Sentry로 넘기는 통로를 하나로 유지하기 위해 남겨둔다.
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  captureError(err);
+  if (res.headersSent) return;
+  res.status(500).json({ error: 'internal server error' });
 });
 
 export default app;
