@@ -1,45 +1,42 @@
 # 그로우미 (GrowMe)
 
-할일을 완료하면 캐릭터 "꾸미"가 XP를 얻어 성장하는 React Native 앱입니다. AI가 사용자의 목표에 맞는 할일을 추천하고, 완료/실패에 반응하며, 친구와 랭킹·챌린지로 경쟁하고, 모은 포인트로 꾸미를 꾸밀 수 있습니다.
+할일을 끝낼 때마다 "꾸미"라는 캐릭터가 자라는 습관관리 앱. 체크박스 대신 캐릭터를 키우는 걸로 동기부여를 준다.
 
-> V1은 타이머 기반 웹(PWA) 서비스였습니다. V2에서 "할일 완료로만 성장한다"는 원칙으로 React Native 앱으로 전면 피벗했습니다. `frontend/`는 V1의 잔재로 더 이상 사용하지 않습니다 — 실제 앱은 `mobile/`입니다.
+원래는 타이머 기반 웹 서비스로 시작했다가, "할일을 완료해야만 성장한다"는 원칙으로 React Native 앱으로 갈아엎었다. `frontend/`는 그 시절 코드고 지금은 안 쓴다 — 실제 앱은 `mobile/`.
 
-## 핵심 컨셉
+## 스크린샷
 
-체크박스가 아니라 **할일 완료(Task 완료)** 로만 꾸미가 성장합니다. 완료한 할일의 XP(`xpValue`)가 쌓이면 성장 단계가 올라가고, 같은 XP가 포인트샵 화폐로도 적립됩니다. AI가 사용자의 목표(Goal)를 바탕으로 할일을 추천하고, 완료/실패 시 짧은 리액션 메시지를 보여줍니다.
+<table>
+<tr>
+<td><img src="docs/screenshots/login.png" width="200"><br>로그인</td>
+<td><img src="docs/screenshots/home.png" width="200"><br>홈</td>
+<td><img src="docs/screenshots/missions.png" width="200"><br>오늘의 미션</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/kkumi-info.png" width="200"><br>꾸미 정보</td>
+<td><img src="docs/screenshots/shop.png" width="200"><br>상점</td>
+<td><img src="docs/screenshots/profile.png" width="200"><br>프로필</td>
+</tr>
+</table>
+
+## 어떻게 굴러가나
+
+목표(Goal)를 세우면 AI가 대화로 목표를 잡아주거나, 대화 없이 직접 입력해도 된다. 목표 밑에 할일(Task)을 만들고 완료하면 XP가 쌓이고, 같은 양만큼 포인트도 쌓인다. XP는 꾸미 성장 단계를 올리고, 포인트는 상점에서 꾸미 꾸미는 데 쓴다.
+
+- 완료/실패할 때마다 AI가 그때그때 다른 반응 문구를 보여준다 (AI가 막히면 미리 준비된 문구로 대체)
+- 완료 이력에서 "성격 유형"을 계산해서 보여준다 (꾸준한 편인지, 막판에 몰아치는 편인지 등)
+- 연속 완료일수(스트릭)도 추적
+- 할일마다 집중 타이머를 켤 수 있고, 카테고리별 권장 시간 이상 채우면 XP 보너스
+- 친구 추가, 랭킹(주간/전체), 챌린지(같이 XP 채우기)
+- 신고/차단 기능
 
 ## 스택
 
-- **모바일**: React Native + Expo (`mobile/`)
-- **백엔드**: Node.js + Express + Prisma (`backend/`)
-- **DB**: PostgreSQL
-- **AI**: Anthropic API (목표 기반 할일 추천, 완료/실패 리액션)
-
-## 완료된 기능 (V2 RN 피벗, 1~8)
-
-1. **앱 셸 & 인증** — Expo RN 앱, 이메일/구글/카카오 로그인, JWT 인증
-2. **꾸미 홈 & XP 성장** — 할일 완료 시 XP 적립, 종/성장단계에 따른 꾸미 렌더링
-3. **AI 온보딩 & 목표 설정** — 대화형 온보딩으로 목표(Goal) 수집
-4. **AI 할일 추천 & 리액션** — 목표 기반 할일 제안, 완료/실패 시 AI 리액션 메시지
-5. **미션 타이머 / 세션 인증** — 할일별 몰입 세션 기록 및 인증
-6. **히스토리** — 완료/실패한 할일 목록, 카테고리·난이도·XP·누적 몰입시간 표시
-7. **소셜 (친구 · 랭킹 · 챌린지)** — 친구 요청/수락, XP 기반 리더보드(친구/전체, 주간/전체기간), 기간제 챌린지 생성·참여
-8. **포인트샵 / 악세서리** — 할일 완료 XP가 포인트로 적립, 5종 고정 카탈로그에서 구매·장착, 꾸미에 악세서리 반영
-
-### 백엔드 라우트
-
-`auth`, `oauthGoogle`, `oauthKakao`, `users`, `goals`, `tasks`, `sessions`, `growth`, `history`, `friends`, `leaderboard`, `challenges`, `shop`, `activities`(레거시)
-
-### 모바일 화면
-
-`LoginScreen`, `SignupScreen`, `OnboardingChatScreen`, `HomeScreen`, `HistoryScreen`, `ProfileScreen`과 프로필 스택 하위의 `FriendsScreen`, `LeaderboardScreen`, `ChallengesScreen`, `ChallengeDetailScreen`, `ShopScreen`
-
-## 테스트
-
-전체 TDD로 진행했습니다 (백엔드 vitest, 모바일 jest). 서브프로젝트 8 완료 시점 기준:
-
-- 백엔드: 171 tests / 22 files, 전부 통과
-- 모바일: 123 tests, 전부 통과 (`HomeScreen.test.tsx`의 모달 타이밍 테스트 1건은 콜드 스타트 시 간헐적 타임아웃 — 알려진 플레이키, 재실행 시 항상 통과)
+- 모바일: React Native + Expo (SDK 54)
+- 백엔드: Node.js + Express + Prisma + PostgreSQL
+- AI: Anthropic API (목표 설정, 할일 추천, 완료/실패 리액션)
+- 에러 트래킹: Sentry (백엔드는 연동됨, 모바일은 아직)
+- 이메일: Resend (비밀번호 재설정)
 
 ## 실행
 
@@ -51,9 +48,11 @@ npm install
 npm run dev
 ```
 
-로컬 PostgreSQL이 필요합니다 (`DATABASE_URL`). `.env.example` 참고 — `growme-postgres` Docker 컨테이너가 있다면 `docker start growme-postgres`로 기동하세요.
+로컬 PostgreSQL 필요 (`DATABASE_URL`). `.env.example` 참고해서 `.env` 만들면 됨. Docker 컨테이너 쓴다면 `docker start growme-postgres`.
 
-### 모바일 (Expo)
+`ANTHROPIC_API_KEY` 없으면 AI 관련 기능은 실패하지만, 목표는 수동 입력으로 우회 가능하고 리액션은 프리셋 문구로 대체되니까 앱 자체는 계속 쓸 수 있다.
+
+### 모바일
 
 ```
 cd mobile
@@ -61,8 +60,23 @@ npm install
 npx expo start
 ```
 
-터미널에 뜨는 QR코드를 휴대폰 Expo Go 앱으로 스캔하면 실행됩니다. iOS 시뮬레이터/Android 에뮬레이터가 있다면 `npm run ios` / `npm run android`도 가능합니다.
+Expo Go로 QR 스캔해서 실행. `app.json`의 `extra.apiBase`는 각자 컴퓨터의 LAN IP로 맞춰야 함 (기기가 같은 네트워크에서 백엔드에 접근해야 하니까).
 
-## 상태
+EAS로 커스텀 dev client 빌드하면 (`eas build --profile development`) 네이티브 모듈이 필요한 기능(모바일 Sentry, 위젯 등)도 테스트 가능. Expo Go는 이런 모듈을 못 실음.
 
-V2 React Native 피벗의 핵심 기능 범위(서브프로젝트 1~8) 구현 완료. 비주얼 디자인은 아직 미적용 상태이며, 다음 스코프는 별도 확인 후 진행합니다.
+## 테스트
+
+TDD로 짰다. 백엔드는 vitest, 모바일은 jest.
+
+```
+cd backend && npm test
+cd mobile && npx jest
+```
+
+백엔드 테스트는 실제 로컬 Postgres를 씀 (목이 아니라 진짜 DB). 모바일 스위트에 `HomeScreen`의 모달 언마운트 타이밍 테스트 하나가 콜드 스타트 시 가끔 실패하는데, 재실행하면 통과하는 알려진 플레이키다.
+
+## 지금 상태
+
+핵심 기능(목표/할일/성장/소셜/상점)은 다 돌아감. EAS 빌드도 한 번 성공적으로 돌려봤고, Android 에뮬레이터에 커스텀 dev client 설치해서 확인했다.
+
+남은 것: 개인정보처리방침 페이지(스토어 출시 전 필수), 모바일 Sentry, 위젯. 서버 푸시 알림이나 신고 검토 대시보드 같은 건 일부러 안 만들기로 했다 — 개인 프로젝트 스코프에 안 맞음.
